@@ -40,7 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 p-6 border-b">
+      <div className="flex items-center gap-2 p-6 border-b flex-shrink-0">
         <Building2 className="h-8 w-8 text-blue-600" />
         <div>
           <h2 className="text-lg font-bold text-gray-900">Accounting Pro</h2>
@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 overflow-y-auto space-y-1 p-4">
         {navigation.map((item) => {
           const Icon = item.icon;
           return (
@@ -64,16 +64,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 }
               `}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4 w-4 flex-shrink-0" />
               {item.name}
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t p-4">
+      <div className="border-t p-4 flex-shrink-0 bg-white">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
             <User className="w-4 h-4 text-white" />
           </div>
           <div className="flex-1 min-w-0">
@@ -85,7 +85,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           onClick={logout}
           variant="outline"
           size="sm"
-          className="w-full justify-start"
+          className="w-full justify-start text-sm"
         >
           <LogOut className="w-4 h-4 mr-2" />
           Logout
@@ -95,10 +95,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Desktop Sidebar - Fixed positioning */}
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:z-50">
-        <div className="bg-white shadow-sm border-r">
+        <div className="bg-white shadow-sm border-r h-full">
           <SidebarContent />
         </div>
       </div>
@@ -111,9 +111,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </Sheet>
 
       {/* Main Content - Properly positioned */}
-      <div className="flex-1 lg:ml-64">
+      <div className="flex-1 lg:ml-64 flex flex-col min-h-0">
         {/* Top Bar */}
-        <div className="bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between lg:px-6 sticky top-0 z-40">
+        <div className="bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between lg:px-6 flex-shrink-0 z-40">
           <div className="flex items-center gap-4">
             <Sheet>
               <SheetTrigger asChild>
@@ -149,7 +149,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6 max-w-full">
+          <div className="p-4 lg:p-6 max-w-full h-full">
             {children}
           </div>
         </main>
