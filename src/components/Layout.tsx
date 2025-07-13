@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Building2, Users, Truck, ShoppingCart, FileText, Receipt,
   CreditCard, Package, AlertTriangle, TrendingUp, BarChart3,
-  BookOpen, Menu, LogOut, Home, User
+  BookOpen, Menu, LogOut, Home, User, Settings
 } from 'lucide-react';
 
 const navigation = [
@@ -24,6 +24,7 @@ const navigation = [
   { name: 'Purchase Report', href: '/purchase-report', icon: BarChart3 },
   { name: 'Sales Report', href: '/sales-report', icon: BarChart3 },
   { name: 'Ledger View', href: '/ledger-view', icon: BookOpen },
+  { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 interface LayoutProps {
@@ -95,8 +96,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
+      {/* Desktop Sidebar - Fixed positioning */}
+      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:z-50">
         <div className="bg-white shadow-sm border-r">
           <SidebarContent />
         </div>
@@ -109,10 +110,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </SheetContent>
       </Sheet>
 
-      {/* Main Content */}
-      <div className="flex-1 lg:pl-64">
+      {/* Main Content - Properly positioned */}
+      <div className="flex-1 lg:ml-64">
         {/* Top Bar */}
-        <div className="bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between lg:px-6">
+        <div className="bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between lg:px-6 sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <Sheet>
               <SheetTrigger asChild>
@@ -148,7 +149,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6">
+          <div className="p-4 lg:p-6 max-w-full">
             {children}
           </div>
         </main>

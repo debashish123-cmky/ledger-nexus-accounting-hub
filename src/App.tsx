@@ -20,6 +20,7 @@ import TodaysCollection from "./pages/TodaysCollection";
 import PurchaseReport from "./pages/PurchaseReport";
 import SalesReport from "./pages/SalesReport";
 import LedgerView from "./pages/LedgerView";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -132,6 +133,13 @@ const App = () => (
               <ProtectedRoute>
                 <Layout>
                   <LedgerView />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Settings />
                 </Layout>
               </ProtectedRoute>
             } />

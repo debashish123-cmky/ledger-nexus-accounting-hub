@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,8 +22,17 @@ interface OrderItem {
 }
 
 const PurchaseOrder = () => {
+  // Generate dynamic order number
+  const generateOrderNo = () => {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear().toString().slice(-2);
+    const nextYear = (currentDate.getFullYear() + 1).toString().slice(-2);
+    const orderCount = Math.floor(Math.random() * 1000) + 1; // In real app, this would come from database
+    return `MRR/${year}-${nextYear}/${orderCount}`;
+  };
+
   const [orderData, setOrderData] = useState({
-    orderNo: 'MRR/25-26/45',
+    orderNo: generateOrderNo(),
     clientName: '',
     clientPhone: '',
     gstNo: '',
@@ -138,19 +146,53 @@ const PurchaseOrder = () => {
     toast({ title: 'Purchase order saved successfully!' });
   };
 
+  const handleNewOrder = () => {
+    setOrderData({
+      orderNo: generateOrderNo(),
+      clientName: '',
+      clientPhone: '',
+      gstNo: '',
+      state: '',
+      reference: '',
+      discountPercent: 0,
+      discountAmount: 0,
+      receivedPayment: 0,
+      paymentMode: 'Cash'
+    });
+    setItems([
+      {
+        id: '1',
+        companyName: '',
+        description: '',
+        qty: 0,
+        unit: 'Pcs',
+        price: 0,
+        taxableAmount: 0,
+        gstPercent: 18,
+        gstAmount: 0,
+        total: 0
+      }
+    ]);
+  };
+
   const totals = calculateTotals();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 w-full max-w-none">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center space-x-2">
           <Receipt className="h-6 w-6 text-blue-600" />
           <h2 className="text-2xl font-bold">Purchase Order</h2>
         </div>
-        <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-          <Save className="h-4 w-4 mr-2" />
-          Save Order
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleNewOrder} variant="outline">
+            New Order
+          </Button>
+          <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+            <Save className="h-4 w-4 mr-2" />
+            Save Order
+          </Button>
+        </div>
       </div>
 
       {/* Order Header */}
@@ -167,7 +209,7 @@ const PurchaseOrder = () => {
                 id="orderNo"
                 value={orderData.orderNo}
                 onChange={(e) => setOrderData({...orderData, orderNo: e.target.value})}
-                placeholder="MRR/25-26/45"
+                placeholder="Auto-generated"
                 required
               />
             </div>
