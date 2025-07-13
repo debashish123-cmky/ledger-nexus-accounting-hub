@@ -36,87 +36,8 @@ const SalesReport = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<SalesRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Sample data - would come from database
-  const salesRecords: SalesRecord[] = [
-    {
-      id: '1',
-      customerName: 'ABC Corporation',
-      phoneNo: '9876543210',
-      taxableAmt: 85000,
-      cgst: 7650,
-      sgst: 7650,
-      igst: 0,
-      total: 100300,
-      invoices: [
-        {
-          id: '1',
-          invoiceNo: 'INV-2024-001',
-          invoiceDate: '2024-01-15',
-          amount: 45000,
-          paymentStatus: 'Paid'
-        },
-        {
-          id: '2',
-          invoiceNo: 'INV-2024-005',
-          invoiceDate: '2024-01-20',
-          amount: 55300,
-          paymentStatus: 'Paid'
-        }
-      ]
-    },
-    {
-      id: '2',
-      customerName: 'John Doe',
-      phoneNo: '9123456789',
-      taxableAmt: 42000,
-      cgst: 0,
-      sgst: 0,
-      igst: 7560,
-      total: 49560,
-      invoices: [
-        {
-          id: '3',
-          invoiceNo: 'INV-2024-003',
-          invoiceDate: '2024-01-18',
-          amount: 25000,
-          paymentStatus: 'Paid'
-        },
-        {
-          id: '4',
-          invoiceNo: 'INV-2024-007',
-          invoiceDate: '2024-01-22',
-          amount: 24560,
-          paymentStatus: 'Pending'
-        }
-      ]
-    },
-    {
-      id: '3',
-      customerName: 'XYZ Enterprises',
-      phoneNo: '9876541230',
-      taxableAmt: 125000,
-      cgst: 11250,
-      sgst: 11250,
-      igst: 0,
-      total: 147500,
-      invoices: [
-        {
-          id: '5',
-          invoiceNo: 'INV-2024-010',
-          invoiceDate: '2024-01-25',
-          amount: 75000,
-          paymentStatus: 'Partial'
-        },
-        {
-          id: '6',
-          invoiceNo: 'INV-2024-012',
-          invoiceDate: '2024-01-28',
-          amount: 72500,
-          paymentStatus: 'Paid'
-        }
-      ]
-    }
-  ];
+  // Empty data array
+  const salesRecords: SalesRecord[] = [];
 
   const calculateTotals = () => {
     const totalTaxable = salesRecords.reduce((sum, record) => sum + record.taxableAmt, 0);

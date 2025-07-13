@@ -24,53 +24,8 @@ interface CollectionEntry {
 const TodaysCollection = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
-  // Sample data - would come from database
-  const collections: CollectionEntry[] = [
-    {
-      id: '1',
-      invoiceNo: 'INV-2024-001',
-      customerName: 'John Doe',
-      phoneNo: '9876543210',
-      totalBill: 2500,
-      cash: 2500,
-      card: 0,
-      upi: 0,
-      timestamp: '2024-01-15T09:30:00'
-    },
-    {
-      id: '2',
-      invoiceNo: 'INV-2024-002',
-      customerName: 'ABC Corporation',
-      phoneNo: '9123456789',
-      totalBill: 15000,
-      cash: 0,
-      card: 15000,
-      upi: 0,
-      timestamp: '2024-01-15T10:45:00'
-    },
-    {
-      id: '3',
-      invoiceNo: 'INV-2024-003',
-      customerName: 'Jane Smith',
-      phoneNo: '9876541230',
-      totalBill: 3200,
-      cash: 0,
-      card: 0,
-      upi: 3200,
-      timestamp: '2024-01-15T14:20:00'
-    },
-    {
-      id: '4',
-      invoiceNo: 'INV-2024-004',
-      customerName: 'XYZ Enterprises',
-      phoneNo: '9555666777',
-      totalBill: 8500,
-      cash: 5000,
-      card: 3500,
-      upi: 0,
-      timestamp: '2024-01-15T16:15:00'
-    }
-  ];
+  // Empty data array
+  const collections: CollectionEntry[] = [];
 
   const filteredCollections = collections.filter(collection => 
     collection.timestamp.startsWith(selectedDate)

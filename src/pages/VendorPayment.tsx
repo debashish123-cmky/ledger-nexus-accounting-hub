@@ -23,30 +23,7 @@ interface VendorPayment {
 }
 
 const VendorPayment = () => {
-  const [payments, setPayments] = useState<VendorPayment[]>([
-    {
-      id: '1',
-      vendorName: 'XYZ Suppliers Ltd',
-      vendorGST: '27XYZAB1234C1D6',
-      paidAmount: 45000,
-      paymentDate: '2024-01-15',
-      paymentMode: 'Bank Transfer',
-      referenceNo: 'TXN123456789',
-      description: 'Payment for Invoice INV-001',
-      status: 'Completed'
-    },
-    {
-      id: '2',
-      vendorName: 'Global Trading Co',
-      vendorGST: '33GLOBA5678T1E9',
-      paidAmount: 25000,
-      paymentDate: '2024-01-16',
-      paymentMode: 'Cheque',
-      referenceNo: 'CHQ001234',
-      description: 'Partial payment for multiple invoices',
-      status: 'Completed'
-    }
-  ]);
+  const [payments, setPayments] = useState<VendorPayment[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);

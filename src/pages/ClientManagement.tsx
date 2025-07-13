@@ -23,30 +23,7 @@ interface Client {
 }
 
 const ClientManagement = () => {
-  const [clients, setClients] = useState<Client[]>([
-    {
-      id: '1',
-      name: 'ABC Corporation',
-      address: '123 Business Street, Mumbai',
-      panNo: 'ABCDE1234F',
-      gstNo: '27ABCDE1234F1Z5',
-      mobileNo: '9876543210',
-      state: 'Maharashtra',
-      clientType: 'Company',
-      createdAt: '2024-01-15'
-    },
-    {
-      id: '2',
-      name: 'John Doe',
-      address: '456 Residential Area, Delhi',
-      panNo: 'FGHIJ5678K',
-      gstNo: '07FGHIJ5678K1A2',
-      mobileNo: '9123456789',
-      state: 'Delhi',
-      clientType: 'Individual',
-      createdAt: '2024-01-20'
-    }
-  ]);
+  const [clients, setClients] = useState<Client[]>([]);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);

@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Eye, Download, Filter } from 'lucide-react';
+import { ShoppingCart, Eye, Download, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface PurchaseRecord {
@@ -15,7 +15,7 @@ interface PurchaseRecord {
   invoiceNo: string;
   invoiceDate: string;
   vendorName: string;
-  gstNo: string;
+  vendorGST: string;
   state: string;
   taxableAmt: number;
   cgst: number;
@@ -28,110 +28,44 @@ interface PurchaseRecord {
 interface PurchaseItem {
   id: string;
   productName: string;
+  hsnCode: string;
   qty: number;
+  unit: string;
   rate: number;
-  taxableAmt: number;
-  gstPercent: number;
-  gstAmt: number;
-  total: number;
+  amount: number;
+  gstRate: number;
 }
 
 const PurchaseReport = () => {
   const [dateFrom, setDateFrom] = useState('2024-01-01');
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedInvoice, setSelectedInvoice] = useState<PurchaseRecord | null>(null);
+  const [selectedPurchase, setSelectedPurchase] = useState<PurchaseRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Sample data - would come from database
-  const purchaseRecords: PurchaseRecord[] = [
-    {
-      id: '1',
-      invoiceNo: 'PINV-2024-001',
-      invoiceDate: '2024-01-15',
-      vendorName: 'ABC Suppliers Ltd',
-      gstNo: '27ABCDE1234F1Z5',
-      state: 'Maharashtra',
-      taxableAmt: 50000,
-      cgst: 4500,
-      sgst: 4500,
-      igst: 0,
-      total: 59000,
-      items: [
-        {
-          id: '1',
-          productName: 'Product A',
-          qty: 100,
-          rate: 250,
-          taxableAmt: 25000,
-          gstPercent: 18,
-          gstAmt: 4500,
-          total: 29500
-        },
-        {
-          id: '2',
-          productName: 'Product B',
-          qty: 50,
-          rate: 500,
-          taxableAmt: 25000,
-          gstPercent: 18,
-          gstAmt: 4500,
-          total: 29500
-        }
-      ]
-    },
-    {
-      id: '2',
-      invoiceNo: 'PINV-2024-002',
-      invoiceDate: '2024-01-16',
-      vendorName: 'XYZ Trading Co',
-      gstNo: '33XYZAB5678C1D9',
-      state: 'Tamil Nadu',
-      taxableAmt: 75000,
-      cgst: 0,
-      sgst: 0,
-      igst: 13500,
-      total: 88500,
-      items: [
-        {
-          id: '3',
-          productName: 'Product C',
-          qty: 150,
-          rate: 500,
-          taxableAmt: 75000,
-          gstPercent: 18,
-          gstAmt: 13500,
-          total: 88500
-        }
-      ]
-    }
-  ];
-
-  const filteredRecords = purchaseRecords.filter(record => 
-    record.invoiceDate >= dateFrom && record.invoiceDate <= dateTo
-  );
+  // Empty data array
+  const purchaseRecords: PurchaseRecord[] = [];
 
   const calculateTotals = () => {
-    const totalTaxable = filteredRecords.reduce((sum, record) => sum + record.taxableAmt, 0);
-    const totalCGST = filteredRecords.reduce((sum, record) => sum + record.cgst, 0);
-    const totalSGST = filteredRecords.reduce((sum, record) => sum + record.sgst, 0);
-    const totalIGST = filteredRecords.reduce((sum, record) => sum + record.igst, 0);
-    const grandTotal = filteredRecords.reduce((sum, record) => sum + record.total, 0);
+    const totalTaxable = purchaseRecords.reduce((sum, record) => sum + record.taxableAmt, 0);
+    const totalCGST = purchaseRecords.reduce((sum, record) => sum + record.cgst, 0);
+    const totalSGST = purchaseRecords.reduce((sum, record) => sum + record.sgst, 0);
+    const totalIGST = purchaseRecords.reduce((sum, record) => sum + record.igst, 0);
+    const grandTotal = purchaseRecords.reduce((sum, record) => sum + record.total, 0);
 
     return { totalTaxable, totalCGST, totalSGST, totalIGST, grandTotal };
   };
 
   const handleViewDetails = (record: PurchaseRecord) => {
-    setSelectedInvoice(record);
+    setSelectedPurchase(record);
     setIsDetailOpen(true);
   };
 
   const exportToCSV = () => {
     const csvContent = [
       ['Invoice No', 'Invoice Date', 'Vendor Name', 'GST No', 'State', 'Taxable Amt', 'CGST', 'SGST', 'IGST', 'Total'],
-      ...filteredRecords.map(record => [
-        record.invoiceNo, record.invoiceDate, record.vendorName, record.gstNo, record.state,
-        record.taxableAmt.toString(), record.cgst.toString(), record.sgst.toString(),
-        record.igst.toString(), record.total.toString()
+      ...purchaseRecords.map(record => [
+        record.invoiceNo, record.invoiceDate, record.vendorName, record.vendorGST, record.state,
+        record.taxableAmt.toString(), record.cgst.toString(), record.sgst.toString(), record.igst.toString(), record.total.toString()
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -150,7 +84,7 @@ const PurchaseReport = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <BarChart3 className="h-6 w-6 text-blue-600" />
+          <ShoppingCart className="h-6 w-6 text-blue-600" />
           <h2 className="text-2xl font-bold">Purchase Report</h2>
         </div>
         <Button onClick={exportToCSV} variant="outline">
@@ -240,7 +174,7 @@ const PurchaseReport = () => {
         <CardHeader>
           <CardTitle>Purchase Summary</CardTitle>
           <CardDescription>
-            Purchase transactions from {new Date(dateFrom).toLocaleDateString('en-IN')} to {new Date(dateTo).toLocaleDateString('en-IN')} ({filteredRecords.length} records)
+            Vendor-wise purchases from {new Date(dateFrom).toLocaleDateString('en-IN')} to {new Date(dateTo).toLocaleDateString('en-IN')} ({purchaseRecords.length} invoices)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -262,15 +196,13 @@ const PurchaseReport = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRecords.map((record) => (
+                {purchaseRecords.map((record) => (
                   <TableRow key={record.id}>
                     <TableCell className="font-medium">{record.invoiceNo}</TableCell>
                     <TableCell>{new Date(record.invoiceDate).toLocaleDateString('en-IN')}</TableCell>
                     <TableCell>{record.vendorName}</TableCell>
-                    <TableCell className="font-mono text-sm">{record.gstNo}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{record.state}</Badge>
-                    </TableCell>
+                    <TableCell className="font-mono text-sm">{record.vendorGST}</TableCell>
+                    <TableCell>{record.state}</TableCell>
                     <TableCell>₹{record.taxableAmt.toLocaleString('en-IN')}</TableCell>
                     <TableCell className={record.cgst > 0 ? 'text-green-600 font-medium' : 'text-gray-400'}>
                       ₹{record.cgst.toLocaleString('en-IN')}
@@ -297,83 +229,84 @@ const PurchaseReport = () => {
             </Table>
           </div>
 
-          {filteredRecords.length === 0 && (
+          {purchaseRecords.length === 0 && (
             <div className="text-center py-8">
-              <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <ShoppingCart className="h-12 w-12 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">No purchase records found for the selected date range</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Invoice Detail Modal */}
+      {/* Purchase Detail Modal */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-6xl">
           <DialogHeader>
-            <DialogTitle>Invoice Details - {selectedInvoice?.invoiceNo}</DialogTitle>
+            <DialogTitle>Purchase Details - {selectedPurchase?.invoiceNo}</DialogTitle>
             <DialogDescription>
-              Complete breakdown of purchase invoice
+              Complete breakdown of purchased items
             </DialogDescription>
           </DialogHeader>
           
-          {selectedInvoice && (
+          {selectedPurchase && (
             <div className="space-y-4">
-              {/* Invoice Header */}
+              {/* Purchase Info */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p><strong>Vendor:</strong> {selectedInvoice.vendorName}</p>
-                  <p><strong>GST No:</strong> {selectedInvoice.gstNo}</p>
-                  <p><strong>State:</strong> {selectedInvoice.state}</p>
+                  <p><strong>Invoice No:</strong> {selectedPurchase.invoiceNo}</p>
+                  <p><strong>Invoice Date:</strong> {new Date(selectedPurchase.invoiceDate).toLocaleDateString('en-IN')}</p>
+                  <p><strong>Vendor:</strong> {selectedPurchase.vendorName}</p>
                 </div>
                 <div>
-                  <p><strong>Invoice Date:</strong> {new Date(selectedInvoice.invoiceDate).toLocaleDateString('en-IN')}</p>
-                  <p><strong>Total Amount:</strong> ₹{selectedInvoice.total.toLocaleString('en-IN')}</p>
+                  <p><strong>GST No:</strong> {selectedPurchase.vendorGST}</p>
+                  <p><strong>State:</strong> {selectedPurchase.state}</p>
+                  <p><strong>Total Amount:</strong> ₹{selectedPurchase.total.toLocaleString('en-IN')}</p>
                 </div>
               </div>
 
               {/* Items Table */}
               <div>
-                <h4 className="font-semibold mb-2">Product Details</h4>
+                <h4 className="font-semibold mb-2">Purchased Items</h4>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Product Name</TableHead>
+                      <TableHead>HSN Code</TableHead>
                       <TableHead>Qty</TableHead>
+                      <TableHead>Unit</TableHead>
                       <TableHead>Rate</TableHead>
-                      <TableHead>Taxable Amt</TableHead>
                       <TableHead>GST%</TableHead>
-                      <TableHead>GST Amt</TableHead>
-                      <TableHead>Total</TableHead>
+                      <TableHead>Amount</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {selectedInvoice.items.map((item) => (
+                    {selectedPurchase.items.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.productName}</TableCell>
+                        <TableCell className="font-mono text-sm">{item.hsnCode}</TableCell>
                         <TableCell>{item.qty}</TableCell>
-                        <TableCell>₹{item.rate.toFixed(2)}</TableCell>
-                        <TableCell>₹{item.taxableAmt.toLocaleString('en-IN')}</TableCell>
-                        <TableCell>{item.gstPercent}%</TableCell>
-                        <TableCell>₹{item.gstAmt.toLocaleString('en-IN')}</TableCell>
-                        <TableCell className="font-bold">₹{item.total.toLocaleString('en-IN')}</TableCell>
+                        <TableCell>{item.unit}</TableCell>
+                        <TableCell>₹{item.rate.toLocaleString('en-IN')}</TableCell>
+                        <TableCell>{item.gstRate}%</TableCell>
+                        <TableCell>₹{item.amount.toLocaleString('en-IN')}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
 
-              {/* Summary */}
+              {/* Tax Summary */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
                 <div>
-                  <p><strong>Taxable Amount:</strong> ₹{selectedInvoice.taxableAmt.toLocaleString('en-IN')}</p>
-                  <p><strong>CGST:</strong> ₹{selectedInvoice.cgst.toLocaleString('en-IN')}</p>
+                  <p><strong>Taxable Amount:</strong> ₹{selectedPurchase.taxableAmt.toLocaleString('en-IN')}</p>
+                  <p><strong>CGST:</strong> ₹{selectedPurchase.cgst.toLocaleString('en-IN')}</p>
                 </div>
                 <div>
-                  <p><strong>SGST:</strong> ₹{selectedInvoice.sgst.toLocaleString('en-IN')}</p>
-                  <p><strong>IGST:</strong> ₹{selectedInvoice.igst.toLocaleString('en-IN')}</p>
+                  <p><strong>SGST:</strong> ₹{selectedPurchase.sgst.toLocaleString('en-IN')}</p>
+                  <p><strong>IGST:</strong> ₹{selectedPurchase.igst.toLocaleString('en-IN')}</p>
                 </div>
                 <div className="col-span-2 pt-2 border-t">
-                  <p className="text-lg font-bold"><strong>Grand Total:</strong> ₹{selectedInvoice.total.toLocaleString('en-IN')}</p>
+                  <p className="text-lg font-bold"><strong>Total Purchase:</strong> ₹{selectedPurchase.total.toLocaleString('en-IN')}</p>
                 </div>
               </div>
             </div>
@@ -382,7 +315,7 @@ const PurchaseReport = () => {
       </Dialog>
 
       {/* Total Summary */}
-      {filteredRecords.length > 0 && (
+      {purchaseRecords.length > 0 && (
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

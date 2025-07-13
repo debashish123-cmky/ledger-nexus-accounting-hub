@@ -26,36 +26,7 @@ interface Vendor {
 }
 
 const VendorManagement = () => {
-  const [vendors, setVendors] = useState<Vendor[]>([
-    {
-      id: '1',
-      name: 'XYZ Suppliers Ltd',
-      address: '789 Industrial Area, Pune',
-      panNo: 'XYZAB1234C',
-      gstNo: '27XYZAB1234C1D6',
-      mobileNo: '9876543210',
-      state: 'Maharashtra',
-      paymentDays: 30,
-      totalPayments: 125000,
-      pendingAmount: 45000,
-      status: 'Active',
-      createdAt: '2024-01-10'
-    },
-    {
-      id: '2',
-      name: 'Global Trading Co',
-      address: '321 Commerce Street, Chennai',
-      panNo: 'GLOBA5678T',
-      gstNo: '33GLOBA5678T1E9',
-      mobileNo: '9123456789',
-      state: 'Tamil Nadu',
-      paymentDays: 45,
-      totalPayments: 89000,
-      pendingAmount: 0,
-      status: 'Active',
-      createdAt: '2024-01-12'
-    }
-  ]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);

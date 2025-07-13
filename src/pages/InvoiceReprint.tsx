@@ -22,41 +22,7 @@ interface Invoice {
 }
 
 const InvoiceReprint = () => {
-  const [invoices] = useState<Invoice[]>([
-    {
-      id: '1',
-      invoiceNo: 'INV-2024-001',
-      invoiceDate: '2024-01-15',
-      clientName: 'ABC Corporation',
-      clientPhone: '9876543210',
-      totalAmount: 25000,
-      paidAmount: 25000,
-      status: 'Paid',
-      paymentMode: 'Bank Transfer'
-    },
-    {
-      id: '2',
-      invoiceNo: 'INV-2024-002',
-      invoiceDate: '2024-01-16',
-      clientName: 'John Doe',
-      clientPhone: '9123456789',
-      totalAmount: 15000,
-      paidAmount: 10000,
-      status: 'Partial',
-      paymentMode: 'UPI'
-    },
-    {
-      id: '3',
-      invoiceNo: 'INV-2024-003',
-      invoiceDate: '2024-01-17',
-      clientName: 'XYZ Enterprises',
-      clientPhone: '9876541230',
-      totalAmount: 35000,
-      paidAmount: 0,
-      status: 'Pending',
-      paymentMode: 'Cash'
-    }
-  ]);
+  const [invoices] = useState<Invoice[]>([]);
 
   const [searchFilters, setSearchFilters] = useState({
     invoiceNo: '',

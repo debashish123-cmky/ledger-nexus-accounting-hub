@@ -28,51 +28,8 @@ const StockExpiry = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  // Sample data - would come from database
-  const expiryItems: ExpiryItem[] = [
-    {
-      id: '1',
-      productName: 'Paracetamol 500mg',
-      hsnCode: '30041000',
-      qty: 50,
-      unit: 'Tablets',
-      batchNo: 'BAT001',
-      expDate: '2024-02-15',
-      rate: 4.00,
-      gstPercent: 12,
-      invoiceDate: '2023-08-15',
-      daysToExpiry: -30,
-      status: 'Expired'
-    },
-    {
-      id: '2',
-      productName: 'Vitamin D3 Capsules',
-      hsnCode: '30041020',
-      qty: 75,
-      unit: 'Capsules',
-      batchNo: 'BAT002',
-      expDate: '2024-02-28',
-      rate: 25.00,
-      gstPercent: 18,
-      invoiceDate: '2023-09-01',
-      daysToExpiry: 15,
-      status: 'Expiring Soon'
-    },
-    {
-      id: '3',
-      productName: 'Cough Syrup 100ml',
-      hsnCode: '30031000',
-      qty: 30,
-      unit: 'Bottles',
-      batchNo: 'BAT003',
-      expDate: '2024-03-31',
-      rate: 85.00,
-      gstPercent: 18,
-      invoiceDate: '2023-10-15',
-      daysToExpiry: 45,
-      status: 'Near Expiry'
-    }
-  ];
+  // Empty data array
+  const expiryItems: ExpiryItem[] = [];
 
   const calculateDaysToExpiry = (expDate: string): number => {
     const today = new Date();
