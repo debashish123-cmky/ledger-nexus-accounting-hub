@@ -95,7 +95,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50">
       {/* Desktop Sidebar - Fixed positioning */}
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:z-50">
         <div className="bg-white shadow-sm border-r h-full">
@@ -111,9 +111,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </Sheet>
 
       {/* Main Content - Properly positioned */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-0">
+      <div className="flex flex-col flex-1 lg:ml-64 min-h-screen">
         {/* Top Bar */}
-        <div className="bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between lg:px-6 flex-shrink-0 z-40">
+        <div className="bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between lg:px-6 sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <Sheet>
               <SheetTrigger asChild>
@@ -149,7 +149,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6 max-w-full h-full">
+          <div className="p-4 lg:p-6 w-full">
             {children}
           </div>
         </main>

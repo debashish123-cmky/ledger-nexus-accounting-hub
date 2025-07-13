@@ -265,28 +265,29 @@ const PurchaseEntry = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="text-xs">
-                  <TableHead className="min-w-[120px]">Company</TableHead>
-                  <TableHead className="min-w-[150px]">Description</TableHead>
-                  <TableHead className="min-w-[80px]">HSN</TableHead>
-                  <TableHead className="min-w-[80px]">Batch</TableHead>
-                  <TableHead className="min-w-[100px]">Exp Date</TableHead>
-                  <TableHead className="min-w-[60px]">Qty</TableHead>
-                  <TableHead className="min-w-[60px]">Unit</TableHead>
-                  <TableHead className="min-w-[60px]">Free</TableHead>
-                  <TableHead className="min-w-[60px]">Pcs</TableHead>
-                  <TableHead className="min-w-[80px]">Rate</TableHead>
-                  <TableHead className="min-w-[80px]">Sales Rate</TableHead>
-                  <TableHead className="min-w-[80px]">Taxable</TableHead>
-                  <TableHead className="min-w-[60px]">GST%</TableHead>
-                  <TableHead className="min-w-[80px]">GST Amt</TableHead>
-                  <TableHead className="min-w-[80px]">Total</TableHead>
-                  <TableHead className="min-w-[60px]">Action</TableHead>
-                </TableRow>
-              </TableHeader>
+          <div className="overflow-x-auto max-w-full">
+            <div className="min-w-[1400px]">
+              <Table>
+                <TableHeader>
+                  <TableRow className="text-xs">
+                    <TableHead className="w-[120px]">Company</TableHead>
+                    <TableHead className="w-[150px]">Description</TableHead>
+                    <TableHead className="w-[80px]">HSN</TableHead>
+                    <TableHead className="w-[80px]">Batch</TableHead>
+                    <TableHead className="w-[100px]">Exp Date</TableHead>
+                    <TableHead className="w-[60px]">Qty</TableHead>
+                    <TableHead className="w-[60px]">Unit</TableHead>
+                    <TableHead className="w-[60px]">Free</TableHead>
+                    <TableHead className="w-[60px]">Pcs</TableHead>
+                    <TableHead className="w-[80px]">Rate</TableHead>
+                    <TableHead className="w-[80px]">Sales Rate</TableHead>
+                    <TableHead className="w-[80px]">Taxable</TableHead>
+                    <TableHead className="w-[60px]">GST%</TableHead>
+                    <TableHead className="w-[80px]">GST Amt</TableHead>
+                    <TableHead className="w-[80px]">Total</TableHead>
+                    <TableHead className="w-[60px]">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {items.map((item) => (
                   <TableRow key={item.id}>
@@ -420,7 +421,8 @@ const PurchaseEntry = () => {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>
