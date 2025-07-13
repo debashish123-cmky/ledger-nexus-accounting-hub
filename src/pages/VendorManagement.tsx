@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,7 +68,7 @@ const VendorManagement = () => {
     mobileNo: '',
     state: '',
     paymentDays: 30,
-    status: 'Active' as const
+    status: 'Active' as 'Active' | 'Inactive'
   });
 
   const states = [
@@ -117,7 +116,7 @@ const VendorManagement = () => {
       mobileNo: '',
       state: '',
       paymentDays: 30,
-      status: 'Active'
+      status: 'Active' as 'Active' | 'Inactive'
     });
     setEditingVendor(null);
     setIsDialogOpen(false);

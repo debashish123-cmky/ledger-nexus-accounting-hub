@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,7 +58,7 @@ const ClientManagement = () => {
     gstNo: '',
     mobileNo: '',
     state: '',
-    clientType: 'Individual' as const
+    clientType: 'Individual' as 'Individual' | 'Company' | 'Partnership'
   });
 
   const states = [
@@ -104,7 +103,7 @@ const ClientManagement = () => {
       gstNo: '',
       mobileNo: '',
       state: '',
-      clientType: 'Individual'
+      clientType: 'Individual' as 'Individual' | 'Company' | 'Partnership'
     });
     setEditingClient(null);
     setIsDialogOpen(false);

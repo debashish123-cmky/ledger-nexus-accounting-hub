@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,10 +56,10 @@ const VendorPayment = () => {
     vendorGST: '',
     paidAmount: 0,
     paymentDate: new Date().toISOString().split('T')[0],
-    paymentMode: 'Bank Transfer' as const,
+    paymentMode: 'Bank Transfer' as 'Cash' | 'Bank Transfer' | 'Cheque' | 'UPI',
     referenceNo: '',
     description: '',
-    status: 'Completed' as const
+    status: 'Completed' as 'Completed' | 'Pending' | 'Failed'
   });
 
   const paymentModes = ['Cash', 'Bank Transfer', 'Cheque', 'UPI'];
@@ -100,10 +99,10 @@ const VendorPayment = () => {
       vendorGST: '',
       paidAmount: 0,
       paymentDate: new Date().toISOString().split('T')[0],
-      paymentMode: 'Bank Transfer',
+      paymentMode: 'Bank Transfer' as 'Cash' | 'Bank Transfer' | 'Cheque' | 'UPI',
       referenceNo: '',
       description: '',
-      status: 'Completed'
+      status: 'Completed' as 'Completed' | 'Pending' | 'Failed'
     });
     setEditingPayment(null);
     setIsDialogOpen(false);
