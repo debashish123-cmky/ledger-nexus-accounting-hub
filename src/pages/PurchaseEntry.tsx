@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Trash2, Save, Calculator, ShoppingCart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { usePurchase } from '@/contexts/PurchaseContext';
 
 interface PurchaseItem {
   id: string;
@@ -29,6 +29,8 @@ interface PurchaseItem {
 }
 
 const PurchaseEntry = () => {
+  const { addPurchaseRecord } = usePurchase();
+  
   const [invoiceData, setInvoiceData] = useState({
     invoiceNo: '',
     invoiceDate: new Date().toISOString().split('T')[0],
@@ -125,17 +127,86 @@ const PurchaseEntry = () => {
   };
 
   const handleSave = () => {
+    // Validation
+    if (!invoiceData.invoiceNo || !invoiceData.vendorName) {
+      toast({ 
+        title: 'Validation Error', 
+        description: 'Please fill in required fields (Invoice No and Vendor Name)',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     const { subtotal, totalGST, grandTotal } = calculateTotals();
     
-    const purchaseData = {
-      invoice: invoiceData,
-      items,
-      totals: { subtotal, totalGST, grandTotal },
-      createdAt: new Date().toISOString()
+    // Calculate GST breakdown based on vendor state
+    const isIntraState = invoiceData.vendorState.toLowerCase() === 'your-state'; // You can adjust this logic
+    const cgst = isIntraState ? totalGST / 2 : 0;
+    const sgst = isIntraState ? totalGST / 2 : 0;
+    const igst = isIntraState ? 0 : totalGST;
+
+    // Create purchase record
+    const purchaseRecord = {
+      id: Date.now().toString(),
+      invoiceNo: invoiceData.invoiceNo,
+      invoiceDate: invoiceData.invoiceDate,
+      vendorName: invoiceData.vendorName,
+      vendorGST: invoiceData.vendorGSTIN,
+      state: invoiceData.vendorState,
+      taxableAmt: subtotal,
+      cgst,
+      sgst,
+      igst,
+      total: grandTotal,
+      items: items.map(item => ({
+        id: item.id,
+        productName: item.description,
+        hsnCode: item.hsnNo,
+        qty: item.qty,
+        unit: item.unit,
+        rate: item.rate,
+        amount: item.total,
+        gstRate: item.gstPercent
+      }))
     };
 
-    console.log('Purchase Entry Saved:', purchaseData);
+    // Add to context
+    addPurchaseRecord(purchaseRecord);
+
+    console.log('Purchase Entry Saved:', purchaseRecord);
     toast({ title: 'Purchase entry saved successfully!' });
+
+    // Reset form
+    setInvoiceData({
+      invoiceNo: '',
+      invoiceDate: new Date().toISOString().split('T')[0],
+      vendorName: '',
+      vendorAddress: '',
+      vendorPhone: '',
+      vendorGSTIN: '',
+      vendorPAN: '',
+      vendorEmail: '',
+      vendorState: ''
+    });
+    
+    setItems([{
+      id: '1',
+      companyName: '',
+      description: '',
+      hsnNo: '',
+      batchNo: '',
+      expDate: '',
+      qty: 0,
+      unit: 'Pcs',
+      freeQty: 0,
+      noOfPc: 1,
+      rate: 0,
+      salesRate: 0,
+      taxableValue: 0,
+      gstPercent: 18,
+      gstAmount: 0,
+      total: 0
+    }]);
   };
 
   const { subtotal, totalGST, grandTotal } = calculateTotals();

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Eye, Download, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { usePurchase } from '@/contexts/PurchaseContext';
 
 interface PurchaseRecord {
   id: string;
@@ -37,13 +37,14 @@ interface PurchaseItem {
 }
 
 const PurchaseReport = () => {
+  const { getPurchaseRecords } = usePurchase();
   const [dateFrom, setDateFrom] = useState('2024-01-01');
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
   const [selectedPurchase, setSelectedPurchase] = useState<PurchaseRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Empty data array
-  const purchaseRecords: PurchaseRecord[] = [];
+  // Get filtered purchase records from context
+  const purchaseRecords = getPurchaseRecords(dateFrom, dateTo);
 
   const calculateTotals = () => {
     const totalTaxable = purchaseRecords.reduce((sum, record) => sum + record.taxableAmt, 0);
