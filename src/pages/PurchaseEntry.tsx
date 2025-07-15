@@ -145,7 +145,7 @@ const PurchaseEntry = () => {
     const sgst = isIntraState ? totalGST / 2 : 0;
     const igst = isIntraState ? 0 : totalGST;
 
-    // Create purchase record
+    // Create purchase record with the correct item structure
     const purchaseRecord = {
       id: Date.now().toString(),
       invoiceNo: invoiceData.invoiceNo,
@@ -158,16 +158,7 @@ const PurchaseEntry = () => {
       sgst,
       igst,
       total: grandTotal,
-      items: items.map(item => ({
-        id: item.id,
-        productName: item.description,
-        hsnCode: item.hsnNo,
-        qty: item.qty,
-        unit: item.unit,
-        rate: item.rate,
-        amount: item.total,
-        gstRate: item.gstPercent
-      }))
+      items: items // Use the full item structure
     };
 
     // Add to context
@@ -336,7 +327,7 @@ const PurchaseEntry = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto max-w-full">
+          <div className="overflow-x-auto">
             <div className="min-w-[1400px]">
               <Table>
                 <TableHeader>

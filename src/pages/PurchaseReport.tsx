@@ -10,6 +10,25 @@ import { ShoppingCart, Eye, Download, Filter } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { usePurchase } from '@/contexts/PurchaseContext';
 
+interface PurchaseItem {
+  id: string;
+  companyName: string;
+  description: string;
+  hsnNo: string;
+  batchNo: string;
+  expDate: string;
+  qty: number;
+  unit: string;
+  freeQty: number;
+  noOfPc: number;
+  rate: number;
+  salesRate: number;
+  taxableValue: number;
+  gstPercent: number;
+  gstAmount: number;
+  total: number;
+}
+
 interface PurchaseRecord {
   id: string;
   invoiceNo: string;
@@ -23,17 +42,6 @@ interface PurchaseRecord {
   igst: number;
   total: number;
   items: PurchaseItem[];
-}
-
-interface PurchaseItem {
-  id: string;
-  productName: string;
-  hsnCode: string;
-  qty: number;
-  unit: string;
-  rate: number;
-  amount: number;
-  gstRate: number;
 }
 
 const PurchaseReport = () => {
@@ -271,8 +279,10 @@ const PurchaseReport = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Product Name</TableHead>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Description</TableHead>
                       <TableHead>HSN Code</TableHead>
+                      <TableHead>Batch No</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Unit</TableHead>
                       <TableHead>Rate</TableHead>
@@ -283,13 +293,15 @@ const PurchaseReport = () => {
                   <TableBody>
                     {selectedPurchase.items.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.productName}</TableCell>
-                        <TableCell className="font-mono text-sm">{item.hsnCode}</TableCell>
+                        <TableCell className="font-medium">{item.companyName}</TableCell>
+                        <TableCell>{item.description}</TableCell>
+                        <TableCell className="font-mono text-sm">{item.hsnNo}</TableCell>
+                        <TableCell>{item.batchNo}</TableCell>
                         <TableCell>{item.qty}</TableCell>
                         <TableCell>{item.unit}</TableCell>
                         <TableCell>₹{item.rate.toLocaleString('en-IN')}</TableCell>
-                        <TableCell>{item.gstRate}%</TableCell>
-                        <TableCell>₹{item.amount.toLocaleString('en-IN')}</TableCell>
+                        <TableCell>{item.gstPercent}%</TableCell>
+                        <TableCell>₹{item.total.toLocaleString('en-IN')}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
