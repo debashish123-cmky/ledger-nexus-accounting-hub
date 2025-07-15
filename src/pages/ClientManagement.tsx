@@ -1,337 +1,209 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Edit, Trash2, Download, Users } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
+import SearchWithVoice from '@/components/SearchWithVoice';
 
 interface Client {
   id: string;
   name: string;
+  email: string;
+  phone: string;
   address: string;
-  panNo: string;
-  gstNo: string;
-  mobileNo: string;
-  state: string;
-  clientType: 'Individual' | 'Company' | 'Partnership';
-  createdAt: string;
+  gstNumber: string;
+  status: 'active' | 'inactive';
+  totalPurchases: number;
+  lastPurchase: string;
 }
 
 const ClientManagement = () => {
-  const [clients, setClients] = useState<Client[]>([]);
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [formData, setFormData] = useState({
+  const { t } = useSettings();
+  const [clients, setClients] = useState<Client[]>([
+    {
+      id: '1',
+      name: 'ABC Corp Ltd',
+      email: 'contact@abccorp.com',
+      phone: '+91 98765 43210',
+      address: '123 Business Park, Mumbai, Maharashtra 400001',
+      gstNumber: '27AABCU9603R1ZX',
+      status: 'active',
+      totalPurchases: 125000,
+      lastPurchase: '2024-01-15'
+    },
+    {
+      id: '2',
+      name: 'XYZ Enterprises',
+      email: 'info@xyzenterprises.in',
+      phone: '+91 88776 65432',
+      address: '456 Innovation Hub, Bangalore, Karnataka 560001',
+      gstNumber: '29XYZPD8765Q2ZA',
+      status: 'active',
+      totalPurchases: 280000,
+      lastPurchase: '2024-02-01'
+    },
+    {
+      id: '3',
+      name: 'Global Solutions Pvt Ltd',
+      email: 'support@globalsolutions.net',
+      phone: '+91 77665 54321',
+      address: '789 Tech Square, Hyderabad, Telangana 500001',
+      gstNumber: '36GSPLE5432A3RT',
+      status: 'inactive',
+      totalPurchases: 85000,
+      lastPurchase: '2023-12-20'
+    },
+  ]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
     name: '',
+    email: '',
+    phone: '',
     address: '',
-    panNo: '',
-    gstNo: '',
-    mobileNo: '',
-    state: '',
-    clientType: 'Individual' as 'Individual' | 'Company' | 'Partnership'
+    gstNumber: '',
+    status: 'active' as const
   });
 
-  const states = [
-    'Andhra Pradesh', 'Bihar', 'Delhi', 'Gujarat', 'Karnataka', 'Kerala',
-    'Maharashtra', 'Tamil Nadu', 'Uttar Pradesh', 'West Bengal'
-  ];
-
   const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.mobileNo.includes(searchTerm) ||
-    client.gstNo.toLowerCase().includes(searchTerm.toLowerCase())
+    client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    client.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    client.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    client.gstNumber.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (editingClient) {
-      setClients(clients.map(client =>
-        client.id === editingClient.id
-          ? { ...client, ...formData }
-          : client
-      ));
-      toast({ title: 'Client updated successfully!' });
-    } else {
-      const newClient: Client = {
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setClients([...clients, newClient]);
-      toast({ title: 'Client added successfully!' });
-    }
-    
-    resetForm();
+  const handleAddClient = () => {
+    const newId = Math.random().toString(36).substring(7);
+    setClients([...clients, { id: newId, ...newClient, totalPurchases: 0, lastPurchase: 'N/A' }]);
+    setNewClient({ name: '', email: '', phone: '', address: '', gstNumber: '', status: 'active' });
+    setIsAddDialogOpen(false);
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      address: '',
-      panNo: '',
-      gstNo: '',
-      mobileNo: '',
-      state: '',
-      clientType: 'Individual' as 'Individual' | 'Company' | 'Partnership'
-    });
-    setEditingClient(null);
-    setIsDialogOpen(false);
-  };
-
-  const handleEdit = (client: Client) => {
-    setFormData({
-      name: client.name,
-      address: client.address,
-      panNo: client.panNo,
-      gstNo: client.gstNo,
-      mobileNo: client.mobileNo,
-      state: client.state,
-      clientType: client.clientType
-    });
-    setEditingClient(client);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
+  const handleDeleteClient = (id: string) => {
     setClients(clients.filter(client => client.id !== id));
-    toast({ title: 'Client deleted successfully!' });
-  };
-
-  const exportToCSV = () => {
-    const csvContent = [
-      ['Name', 'Address', 'PAN No', 'GST No', 'Mobile No', 'State', 'Client Type'],
-      ...filteredClients.map(client => [
-        client.name, client.address, client.panNo, client.gstNo,
-        client.mobileNo, client.state, client.clientType
-      ])
-    ].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'clients.csv';
-    a.click();
-    toast({ title: 'Client data exported successfully!' });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Users className="h-6 w-6 text-blue-600" />
-          <h2 className="text-2xl font-bold">Client Management</h2>
-        </div>
-        <div className="flex space-x-2">
-          <Button onClick={exportToCSV} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Client
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingClient ? 'Edit Client' : 'Add New Client'}
-                </DialogTitle>
-                <DialogDescription>
-                  Fill in the client details below.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Client Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="clientType">Client Type *</Label>
-                    <Select value={formData.clientType} onValueChange={(value: any) => setFormData({...formData, clientType: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Individual">Individual</SelectItem>
-                        <SelectItem value="Company">Company</SelectItem>
-                        <SelectItem value="Partnership">Partnership</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="address">Address *</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="panNo">PAN No *</Label>
-                    <Input
-                      id="panNo"
-                      value={formData.panNo}
-                      onChange={(e) => setFormData({...formData, panNo: e.target.value.toUpperCase()})}
-                      placeholder="ABCDE1234F"
-                      maxLength={10}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="gstNo">GST No</Label>
-                    <Input
-                      id="gstNo"
-                      value={formData.gstNo}
-                      onChange={(e) => setFormData({...formData, gstNo: e.target.value.toUpperCase()})}
-                      placeholder="27ABCDE1234F1Z5"
-                      maxLength={15}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="mobileNo">Mobile No *</Label>
-                    <Input
-                      id="mobileNo"
-                      value={formData.mobileNo}
-                      onChange={(e) => setFormData({...formData, mobileNo: e.target.value})}
-                      placeholder="9876543210"
-                      maxLength={10}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State *</Label>
-                    <Select value={formData.state} onValueChange={(value) => setFormData({...formData, state: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select State" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {states.map(state => (
-                          <SelectItem key={state} value={state}>{state}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={resetForm}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingClient ? 'Update' : 'Add'} Client
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-foreground">{t('clients')}</h1>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              {t('add')} {t('clients')}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('add')} {t('clients')}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">{t('companyName')}</Label>
+                <Input id="name" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">Email</Label>
+                <Input id="email" type="email" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phone" className="text-right">{t('phone')}</Label>
+                <Input id="phone" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="address" className="text-right">{t('address')}</Label>
+                <Input id="address" value={newClient.address} onChange={(e) => setNewClient({ ...newClient, address: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="gst" className="text-right">{t('gstNumber')}</Label>
+                <Input id="gst" value={newClient.gstNumber} onChange={(e) => setNewClient({ ...newClient, gstNumber: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">Status</Label>
+                <Select onValueChange={(value) => setNewClient({ ...newClient, status: value as 'active' | 'inactive' })}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button type="button" variant="secondary" onClick={() => setIsAddDialogOpen(false)}>{t('cancel')}</Button>
+              <Button type="submit" onClick={handleAddClient}>{t('save')}</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Client Directory</CardTitle>
-          <CardDescription>
-            Manage your client database
-          </CardDescription>
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search clients by name, mobile, or GST number..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Mobile No</TableHead>
-                  <TableHead>GST No</TableHead>
-                  <TableHead>State</TableHead>
-                  <TableHead>Added Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div>{client.name}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
-                          {client.address}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{client.clientType}</Badge>
-                    </TableCell>
-                    <TableCell>{client.mobileNo}</TableCell>
-                    <TableCell className="font-mono text-sm">{client.gstNo || '-'}</TableCell>
-                    <TableCell>{client.state}</TableCell>
-                    <TableCell>{new Date(client.createdAt).toLocaleDateString('en-IN')}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(client)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(client.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {filteredClients.length === 0 && (
-            <div className="text-center py-8">
-              <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No clients found</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <SearchWithVoice
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={`${t('search')} ${t('clients')}...`}
+          className="flex-1"
+        />
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredClients.map(client => (
+          <Card key={client.id}>
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                {client.name}
+                <Badge variant={client.status === 'active' ? 'default' : 'destructive'}>
+                  {client.status}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                {client.email}
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                {client.phone}
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                {client.address}
+              </div>
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <span className="font-medium">GST:</span>
+                {client.gstNumber}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Total Purchases:</span> ₹{client.totalPurchases}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Last Purchase:</span> {client.lastPurchase}
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="ghost" size="sm">
+                  <Edit className="h-4 w-4 mr-2" />
+                  {t('edit')}
+                </Button>
+                <Button variant="ghost" size="sm" className="text-red-600" onClick={() => handleDeleteClient(client.id)}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t('delete')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

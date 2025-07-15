@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -39,19 +40,12 @@ All colors MUST be HSL.
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -101,5 +95,44 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Ensure all components follow the theme */
+  .dark * {
+    border-color: hsl(var(--border));
+  }
+
+  /* Fix specific components for dark mode */
+  .dark .bg-white {
+    @apply bg-card;
+  }
+
+  .dark .text-gray-900 {
+    @apply text-foreground;
+  }
+
+  .dark .text-gray-700 {
+    @apply text-muted-foreground;
+  }
+
+  .dark .text-gray-500 {
+    @apply text-muted-foreground;
+  }
+
+  .dark .border-gray-200 {
+    @apply border-border;
+  }
+
+  .dark .bg-gray-50 {
+    @apply bg-background;
+  }
+
+  .dark .bg-gray-100 {
+    @apply bg-muted;
+  }
+
+  .dark .shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(255, 255, 255, 0.05);
   }
 }

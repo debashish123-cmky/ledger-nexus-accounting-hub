@@ -1,369 +1,237 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Edit, Trash2, Download, Truck } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin, Building } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
+import SearchWithVoice from '@/components/SearchWithVoice';
 
 interface Vendor {
   id: string;
   name: string;
+  email: string;
+  phone: string;
   address: string;
-  panNo: string;
-  gstNo: string;
-  mobileNo: string;
-  state: string;
-  paymentDays: number;
-  totalPayments: number;
-  pendingAmount: number;
-  status: 'Active' | 'Inactive';
-  createdAt: string;
+  gstNumber: string;
+  status: 'active' | 'inactive';
+  totalSupplied: number;
+  lastSupply: string;
+  category: string;
 }
 
 const VendorManagement = () => {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
-  const [formData, setFormData] = useState({
+  const { t } = useSettings();
+  const [vendors, setVendors] = useState<Vendor[]>([
+    {
+      id: '1',
+      name: 'Tech Supplies Inc',
+      email: 'sales@techsupplies.com',
+      phone: '+91 99887 76543',
+      address: '456 Industrial Area, Pune, Maharashtra 411001',
+      gstNumber: '27AABCT1234R1ZY',
+      status: 'active',
+      totalSupplied: 250000,
+      lastSupply: '2024-01-18',
+      category: 'Electronics'
+    },
+    {
+      id: '2',
+      name: 'Global Hardware Ltd',
+      email: 'info@globalhardware.com',
+      phone: '+91 88776 65432',
+      address: '789 Export Zone, Chennai, Tamil Nadu 600001',
+      gstNumber: '33BBCDE5678Q2ZA',
+      status: 'active',
+      totalSupplied: 180000,
+      lastSupply: '2024-01-22',
+      category: 'Hardware'
+    },
+    {
+      id: '3',
+      name: 'Quality Fabrics Pvt Ltd',
+      email: 'order@qualityfabrics.in',
+      phone: '+91 77665 54321',
+      address: '101 Textile Hub, Surat, Gujarat 395001',
+      gstNumber: '24CCDEF9012A3YB',
+      status: 'inactive',
+      totalSupplied: 95000,
+      lastSupply: '2023-12-28',
+      category: 'Textiles'
+    },
+  ]);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newVendor, setNewVendor] = useState({
     name: '',
+    email: '',
+    phone: '',
     address: '',
-    panNo: '',
-    gstNo: '',
-    mobileNo: '',
-    state: '',
-    paymentDays: 30,
-    status: 'Active' as 'Active' | 'Inactive'
+    gstNumber: '',
+    status: 'active' as const,
+    category: ''
   });
 
-  const states = [
-    'Andhra Pradesh', 'Bihar', 'Delhi', 'Gujarat', 'Karnataka', 'Kerala',
-    'Maharashtra', 'Tamil Nadu', 'Uttar Pradesh', 'West Bengal'
-  ];
-
   const filteredVendors = vendors.filter(vendor =>
-    vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vendor.mobileNo.includes(searchTerm) ||
-    vendor.gstNo.toLowerCase().includes(searchTerm.toLowerCase())
+    vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vendor.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vendor.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vendor.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    vendor.gstNumber.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (editingVendor) {
-      setVendors(vendors.map(vendor =>
-        vendor.id === editingVendor.id
-          ? { ...vendor, ...formData }
-          : vendor
-      ));
-      toast({ title: 'Vendor updated successfully!' });
-    } else {
-      const newVendor: Vendor = {
-        id: Date.now().toString(),
-        ...formData,
-        totalPayments: 0,
-        pendingAmount: 0,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setVendors([...vendors, newVendor]);
-      toast({ title: 'Vendor added successfully!' });
-    }
-    
-    resetForm();
+  const handleAddVendor = () => {
+    const newId = String(vendors.length + 1);
+    setVendors([...vendors, { id: newId, ...newVendor, totalSupplied: 0, lastSupply: 'N/A' }]);
+    setNewVendor({ name: '', email: '', phone: '', address: '', gstNumber: '', status: 'active', category: '' });
+    setIsAddDialogOpen(false);
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      address: '',
-      panNo: '',
-      gstNo: '',
-      mobileNo: '',
-      state: '',
-      paymentDays: 30,
-      status: 'Active' as 'Active' | 'Inactive'
-    });
-    setEditingVendor(null);
-    setIsDialogOpen(false);
-  };
-
-  const handleEdit = (vendor: Vendor) => {
-    setFormData({
-      name: vendor.name,
-      address: vendor.address,
-      panNo: vendor.panNo,
-      gstNo: vendor.gstNo,
-      mobileNo: vendor.mobileNo,
-      state: vendor.state,
-      paymentDays: vendor.paymentDays,
-      status: vendor.status
-    });
-    setEditingVendor(vendor);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
+  const handleDeleteVendor = (id: string) => {
     setVendors(vendors.filter(vendor => vendor.id !== id));
-    toast({ title: 'Vendor deleted successfully!' });
-  };
-
-  const exportToCSV = () => {
-    const csvContent = [
-      ['Name', 'Address', 'PAN No', 'GST No', 'Mobile No', 'State', 'Payment Days', 'Total Payments', 'Pending Amount', 'Status'],
-      ...filteredVendors.map(vendor => [
-        vendor.name, vendor.address, vendor.panNo, vendor.gstNo,
-        vendor.mobileNo, vendor.state, vendor.paymentDays.toString(),
-        vendor.totalPayments.toString(), vendor.pendingAmount.toString(), vendor.status
-      ])
-    ].map(row => row.join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'vendors.csv';
-    a.click();
-    toast({ title: 'Vendor data exported successfully!' });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Truck className="h-6 w-6 text-green-600" />
-          <h2 className="text-2xl font-bold">Vendor Management</h2>
-        </div>
-        <div className="flex space-x-2">
-          <Button onClick={exportToCSV} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Vendor
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingVendor ? 'Edit Vendor' : 'Add New Vendor'}
-                </DialogTitle>
-                <DialogDescription>
-                  Fill in the vendor details below.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Vendor Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="status">Status *</Label>
-                    <Select value={formData.status} onValueChange={(value: any) => setFormData({...formData, status: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="address">Address *</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="panNo">PAN No *</Label>
-                    <Input
-                      id="panNo"
-                      value={formData.panNo}
-                      onChange={(e) => setFormData({...formData, panNo: e.target.value.toUpperCase()})}
-                      placeholder="ABCDE1234F"
-                      maxLength={10}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="gstNo">GST No</Label>
-                    <Input
-                      id="gstNo"
-                      value={formData.gstNo}
-                      onChange={(e) => setFormData({...formData, gstNo: e.target.value.toUpperCase()})}
-                      placeholder="27ABCDE1234F1Z5"
-                      maxLength={15}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="mobileNo">Mobile No *</Label>
-                    <Input
-                      id="mobileNo"
-                      value={formData.mobileNo}
-                      onChange={(e) => setFormData({...formData, mobileNo: e.target.value})}
-                      placeholder="9876543210"
-                      maxLength={10}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State *</Label>
-                    <Select value={formData.state} onValueChange={(value) => setFormData({...formData, state: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select State" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {states.map(state => (
-                          <SelectItem key={state} value={state}>{state}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="paymentDays">Payment Days *</Label>
-                    <Input
-                      id="paymentDays"
-                      type="number"
-                      value={formData.paymentDays}
-                      onChange={(e) => setFormData({...formData, paymentDays: parseInt(e.target.value) || 0})}
-                      min="0"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={resetForm}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingVendor ? 'Update' : 'Add'} Vendor
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-foreground">{t('vendors')}</h1>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              {t('add')} {t('vendors')}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('add')} {t('vendors')}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">{t('vendorName')}</Label>
+                <Input id="name" value={newVendor.name} onChange={(e) => setNewVendor({ ...newVendor, name: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">Email</Label>
+                <Input id="email" type="email" value={newVendor.email} onChange={(e) => setNewVendor({ ...newVendor, email: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phone" className="text-right">{t('phone')}</Label>
+                <Input id="phone" value={newVendor.phone} onChange={(e) => setNewVendor({ ...newVendor, phone: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="address" className="text-right">{t('address')}</Label>
+                <Input id="address" value={newVendor.address} onChange={(e) => setNewVendor({ ...newVendor, address: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="gstNumber" className="text-right">{t('gstNumber')}</Label>
+                <Input id="gstNumber" value={newVendor.gstNumber} onChange={(e) => setNewVendor({ ...newVendor, gstNumber: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right">Category</Label>
+                <Input id="category" value={newVendor.category} onChange={(e) => setNewVendor({ ...newVendor, category: e.target.value })} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">Status</Label>
+                <Select value={newVendor.status} onValueChange={(value) => setNewVendor({ ...newVendor, status: value as 'active' | 'inactive' })}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button type="button" variant="secondary" onClick={() => setIsAddDialogOpen(false)}>{t('cancel')}</Button>
+              <Button type="submit" onClick={handleAddVendor}>{t('save')}</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Vendor Directory</CardTitle>
-          <CardDescription>
-            Manage your vendor database and payment tracking
-          </CardDescription>
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search vendors by name, mobile, or GST number..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Vendor Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>GST No</TableHead>
-                  <TableHead>Payment Terms</TableHead>
-                  <TableHead>Total Payments</TableHead>
-                  <TableHead>Pending Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredVendors.map((vendor) => (
-                  <TableRow key={vendor.id}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div>{vendor.name}</div>
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
-                          {vendor.address}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="text-sm">{vendor.mobileNo}</div>
-                        <div className="text-xs text-gray-500">{vendor.state}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{vendor.gstNo || '-'}</TableCell>
-                    <TableCell>{vendor.paymentDays} days</TableCell>
-                    <TableCell>₹{vendor.totalPayments.toLocaleString('en-IN')}</TableCell>
-                    <TableCell>
-                      <span className={vendor.pendingAmount > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
-                        ₹{vendor.pendingAmount.toLocaleString('en-IN')}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={vendor.status === 'Active' ? 'default' : 'secondary'}>
-                        {vendor.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(vendor)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(vendor.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {filteredVendors.length === 0 && (
-            <div className="text-center py-8">
-              <Truck className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No vendors found</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <SearchWithVoice
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={`${t('search')} ${t('vendors')}...`}
+          className="flex-1"
+        />
+      </div>
+
+      <div className="grid gap-4">
+        {filteredVendors.map((vendor) => (
+          <Card key={vendor.id}>
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                {vendor.name}
+                <div className="flex items-center space-x-2">
+                  <Badge variant={vendor.status === 'active' ? 'default' : 'secondary'}>
+                    {vendor.status}
+                  </Badge>
+                  <Button variant="ghost" size="sm">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeleteVendor(vendor.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium">{t('companyName')}</p>
+                  <p className="text-muted-foreground">{vendor.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Email</p>
+                  <p className="text-muted-foreground">
+                    <Mail className="h-4 w-4 mr-1 inline-block" />
+                    {vendor.email}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{t('phone')}</p>
+                  <p className="text-muted-foreground">
+                    <Phone className="h-4 w-4 mr-1 inline-block" />
+                    {vendor.phone}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{t('address')}</p>
+                  <p className="text-muted-foreground">
+                    <MapPin className="h-4 w-4 mr-1 inline-block" />
+                    {vendor.address}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{t('gstNumber')}</p>
+                  <p className="text-muted-foreground">{vendor.gstNumber}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Category</p>
+                  <p className="text-muted-foreground">{vendor.category}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Total Supplied</p>
+                  <p className="text-muted-foreground">₹{vendor.totalSupplied}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Last Supply</p>
+                  <p className="text-muted-foreground">{vendor.lastSupply}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
