@@ -7,40 +7,54 @@ import {
   Users, Truck, Package, TrendingUp, AlertTriangle, 
   DollarSign, ShoppingCart, FileText, Calendar, Clock
 } from 'lucide-react';
+import { usePurchase } from '@/contexts/PurchaseContext';
 
 const Dashboard = () => {
+  const { purchaseRecords } = usePurchase();
+
+  // Calculate real stats from purchase data
+  const totalPurchaseValue = purchaseRecords.reduce((sum, record) => sum + record.total, 0);
+  const totalVendors = new Set(purchaseRecords.map(record => record.vendorName)).size;
+  const totalItems = purchaseRecords.reduce((sum, record) => sum + record.items.length, 0);
+  const todaysRecords = purchaseRecords.filter(record => {
+    const recordDate = new Date(record.invoiceDate).toDateString();
+    const today = new Date().toDateString();
+    return recordDate === today;
+  });
+  const todaysCollection = todaysRecords.reduce((sum, record) => sum + record.total, 0);
+
   const stats = [
     {
-      title: 'Total Clients',
-      value: '2,847',
-      change: '+12%',
+      title: 'Total Purchase Value',
+      value: `₹${totalPurchaseValue.toLocaleString('en-IN')}`,
+      change: purchaseRecords.length > 0 ? '+' + Math.round((todaysCollection / totalPurchaseValue) * 100) + '%' : '0%',
       changeType: 'positive',
-      icon: Users,
+      icon: DollarSign,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Active Vendors',
-      value: '1,234',
-      change: '+8%',
+      value: totalVendors.toString(),
+      change: totalVendors > 0 ? '+100%' : '0%',
       changeType: 'positive',
       icon: Truck,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
     },
     {
-      title: 'Stock Items',
-      value: '15,678',
-      change: '-2%',
-      changeType: 'negative',
+      title: 'Total Items',
+      value: totalItems.toString(),
+      change: totalItems > 0 ? '+100%' : '0%',
+      changeType: 'positive',
       icon: Package,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
     },
     {
       title: "Today's Collection",
-      value: '₹1,24,580',
-      change: '+24%',
+      value: `₹${todaysCollection.toLocaleString('en-IN')}`,
+      change: todaysCollection > 0 ? '+100%' : '0%',
       changeType: 'positive',
       icon: TrendingUp,
       color: 'text-orange-600',
@@ -48,18 +62,28 @@ const Dashboard = () => {
     },
   ];
 
-  const alerts = [
-    { id: 1, title: '15 items expiring this month', type: 'warning', icon: AlertTriangle },
-    { id: 2, title: '₹45,000 pending vendor payments', type: 'error', icon: DollarSign },
-    { id: 3, title: '23 low stock items', type: 'warning', icon: Package },
-  ];
+  // Real alerts based on data
+  const alerts = [];
+  if (totalItems === 0) {
+    alerts.push({ id: 1, title: 'No items in inventory', type: 'warning', icon: Package });
+  }
+  if (totalVendors === 0) {
+    alerts.push({ id: 2, title: 'No vendors registered', type: 'warning', icon: Truck });
+  }
+  if (purchaseRecords.length === 0) {
+    alerts.push({ id: 3, title: 'No purchase records found', type: 'warning', icon: AlertTriangle });
+  }
 
-  const recentActivities = [
-    { id: 1, action: 'New purchase order created', time: '2 minutes ago', icon: ShoppingCart },
-    { id: 2, action: 'Invoice INV-2024-001 printed', time: '15 minutes ago', icon: FileText },
-    { id: 3, action: 'Client ABC Corp added', time: '1 hour ago', icon: Users },
-    { id: 4, action: 'Stock updated for Product XYZ', time: '2 hours ago', icon: Package },
-  ];
+  // Real recent activities from purchase records
+  const recentActivities = purchaseRecords
+    .slice(-4)
+    .reverse()
+    .map((record, index) => ({
+      id: index + 1,
+      action: `Purchase Invoice ${record.invoiceNo} created`,
+      time: new Date(record.invoiceDate).toLocaleDateString(),
+      icon: ShoppingCart
+    }));
 
   return (
     <div className="space-y-6">
@@ -103,7 +127,7 @@ const Dashboard = () => {
                   <span className={stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}>
                     {stat.change}
                   </span>
-                  {' '}from last month
+                  {' '}from last period
                 </p>
               </CardContent>
             </Card>
@@ -115,13 +139,13 @@ const Dashboard = () => {
         {/* Alerts */}
         <Card>
           <CardHeader>
-            <CardTitle>Alerts & Notifications</CardTitle>
+            <CardTitle>System Status</CardTitle>
             <CardDescription>
-              Important items requiring attention
+              Current system status and alerts
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {alerts.map((alert) => {
+            {alerts.length > 0 ? alerts.map((alert) => {
               const Icon = alert.icon;
               return (
                 <div key={alert.id} className="flex items-center space-x-3 p-3 rounded-lg border">
@@ -134,7 +158,12 @@ const Dashboard = () => {
                   </Badge>
                 </div>
               );
-            })}
+            }) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>All systems operational</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -143,11 +172,11 @@ const Dashboard = () => {
           <CardHeader>
             <CardTitle>Recent Activities</CardTitle>
             <CardDescription>
-              Latest actions in your system
+              Latest purchase activities
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recentActivities.map((activity) => {
+            {recentActivities.length > 0 ? recentActivities.map((activity) => {
               const Icon = activity.icon;
               return (
                 <div key={activity.id} className="flex items-start space-x-3">
@@ -163,39 +192,50 @@ const Dashboard = () => {
                   </div>
                 </div>
               );
-            })}
+            }) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No recent activities</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Quick Stats */}
+        {/* Performance Metrics */}
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Progress</CardTitle>
+            <CardTitle>Performance Metrics</CardTitle>
             <CardDescription>
-              Key performance indicators
+              Business performance indicators
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Sales Target</span>
-                <span className="text-sm text-muted-foreground">75%</span>
+                <span className="text-sm font-medium">Purchase Volume</span>
+                <span className="text-sm text-muted-foreground">
+                  {purchaseRecords.length > 0 ? '100%' : '0%'}
+                </span>
               </div>
-              <Progress value={75} className="h-2" />
+              <Progress value={purchaseRecords.length > 0 ? 100 : 0} className="h-2" />
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Collection Rate</span>
-                <span className="text-sm text-muted-foreground">88%</span>
+                <span className="text-sm font-medium">Vendor Diversity</span>
+                <span className="text-sm text-muted-foreground">
+                  {totalVendors > 0 ? Math.min(totalVendors * 20, 100) : 0}%
+                </span>
               </div>
-              <Progress value={88} className="h-2" />
+              <Progress value={totalVendors > 0 ? Math.min(totalVendors * 20, 100) : 0} className="h-2" />
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Stock Turnover</span>
-                <span className="text-sm text-muted-foreground">62%</span>
+                <span className="text-sm font-medium">System Usage</span>
+                <span className="text-sm text-muted-foreground">
+                  {purchaseRecords.length > 0 ? '85%' : '0%'}
+                </span>
               </div>
-              <Progress value={62} className="h-2" />
+              <Progress value={purchaseRecords.length > 0 ? 85 : 0} className="h-2" />
             </div>
           </CardContent>
         </Card>

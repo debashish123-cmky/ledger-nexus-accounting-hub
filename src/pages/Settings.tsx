@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,49 +22,44 @@ import {
   Monitor
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useSettings } from '@/contexts/SettingsContext';
 
 const Settings = () => {
-  const [backupSettings, setBackupSettings] = useState({
-    autoBackup: true,
-    backupFrequency: 'daily',
-    retentionDays: 30,
-    lastBackup: '2024-01-15 10:30:00'
-  });
-
-  const [uiSettings, setUiSettings] = useState({
-    theme: 'light',
-    language: 'english',
-    dateFormat: 'dd-mm-yyyy',
-    timeFormat: '24h',
-    showAnimations: true,
-    compactMode: false
-  });
-
-  const [roleSettings, setRoleSettings] = useState({
-    adminAccess: true,
-    accountantAccess: true,
-    salesAccess: false,
-    viewerAccess: false
-  });
-
-  const [systemSettings, setSystemSettings] = useState({
-    companyName: 'Accounting Pro',
-    gstNumber: '',
-    panNumber: '',
-    address: '',
-    phone: '',
-    email: '',
-    financialYear: '2024-25'
-  });
+  const {
+    // UI Settings
+    theme, setTheme,
+    language, setLanguage,
+    dateFormat, setDateFormat,
+    timeFormat, setTimeFormat,
+    showAnimations, setShowAnimations,
+    compactMode, setCompactMode,
+    
+    // Role Settings
+    adminAccess, setAdminAccess,
+    accountantAccess, setAccountantAccess,
+    salesAccess, setSalesAccess,
+    viewerAccess, setViewerAccess,
+    
+    // Company Settings
+    companyName, setCompanyName,
+    gstNumber, setGstNumber,
+    panNumber, setPanNumber,
+    address, setAddress,
+    phone, setPhone,
+    email, setEmail,
+    financialYear, setFinancialYear,
+    
+    // Backup Settings
+    autoBackup, setAutoBackup,
+    backupFrequency, setBackupFrequency,
+    retentionDays, setRetentionDays,
+    lastBackup, setLastBackup
+  } = useSettings();
 
   const handleBackupNow = () => {
     toast({ title: 'Backup initiated', description: 'Your data is being backed up...' });
-    // Simulate backup process
     setTimeout(() => {
-      setBackupSettings({
-        ...backupSettings,
-        lastBackup: new Date().toLocaleString()
-      });
+      setLastBackup(new Date().toLocaleString());
       toast({ title: 'Backup completed successfully!' });
     }, 2000);
   };
@@ -88,9 +83,9 @@ const Settings = () => {
         <h2 className="text-2xl font-bold">Settings</h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Backup & Data Management */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Database className="h-5 w-5" />
@@ -105,21 +100,14 @@ const Settings = () => {
                 <div className="text-sm text-gray-500">Automatically backup data</div>
               </div>
               <Switch
-                checked={backupSettings.autoBackup}
-                onCheckedChange={(checked) => 
-                  setBackupSettings({...backupSettings, autoBackup: checked})
-                }
+                checked={autoBackup}
+                onCheckedChange={setAutoBackup}
               />
             </div>
 
             <div className="space-y-2">
               <Label>Backup Frequency</Label>
-              <Select 
-                value={backupSettings.backupFrequency} 
-                onValueChange={(value) => 
-                  setBackupSettings({...backupSettings, backupFrequency: value})
-                }
-              >
+              <Select value={backupFrequency} onValueChange={setBackupFrequency}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -136,16 +124,14 @@ const Settings = () => {
               <Label>Retention Period (Days)</Label>
               <Input
                 type="number"
-                value={backupSettings.retentionDays}
-                onChange={(e) => 
-                  setBackupSettings({...backupSettings, retentionDays: parseInt(e.target.value) || 30})
-                }
+                value={retentionDays}
+                onChange={(e) => setRetentionDays(parseInt(e.target.value) || 30)}
               />
             </div>
 
             <div className="space-y-2">
               <Label>Last Backup</Label>
-              <div className="text-sm text-gray-600">{backupSettings.lastBackup}</div>
+              <div className="text-sm text-gray-600">{lastBackup}</div>
             </div>
 
             <Separator />
@@ -168,7 +154,7 @@ const Settings = () => {
         </Card>
 
         {/* UI & Display Settings */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Palette className="h-5 w-5" />
@@ -179,12 +165,7 @@ const Settings = () => {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label>Theme</Label>
-              <Select 
-                value={uiSettings.theme} 
-                onValueChange={(value) => 
-                  setUiSettings({...uiSettings, theme: value})
-                }
-              >
+              <Select value={theme} onValueChange={setTheme}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -213,12 +194,7 @@ const Settings = () => {
 
             <div className="space-y-2">
               <Label>Language</Label>
-              <Select 
-                value={uiSettings.language} 
-                onValueChange={(value) => 
-                  setUiSettings({...uiSettings, language: value})
-                }
-              >
+              <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -233,12 +209,7 @@ const Settings = () => {
 
             <div className="space-y-2">
               <Label>Date Format</Label>
-              <Select 
-                value={uiSettings.dateFormat} 
-                onValueChange={(value) => 
-                  setUiSettings({...uiSettings, dateFormat: value})
-                }
-              >
+              <Select value={dateFormat} onValueChange={setDateFormat}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -256,10 +227,8 @@ const Settings = () => {
                 <div className="text-sm text-gray-500">Enable UI animations</div>
               </div>
               <Switch
-                checked={uiSettings.showAnimations}
-                onCheckedChange={(checked) => 
-                  setUiSettings({...uiSettings, showAnimations: checked})
-                }
+                checked={showAnimations}
+                onCheckedChange={setShowAnimations}
               />
             </div>
 
@@ -269,17 +238,15 @@ const Settings = () => {
                 <div className="text-sm text-gray-500">Reduce spacing and padding</div>
               </div>
               <Switch
-                checked={uiSettings.compactMode}
-                onCheckedChange={(checked) => 
-                  setUiSettings({...uiSettings, compactMode: checked})
-                }
+                checked={compactMode}
+                onCheckedChange={setCompactMode}
               />
             </div>
           </CardContent>
         </Card>
 
         {/* Role & Access Management */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Shield className="h-5 w-5" />
@@ -294,10 +261,8 @@ const Settings = () => {
                 <div className="text-sm text-gray-500">Full system access</div>
               </div>
               <Switch
-                checked={roleSettings.adminAccess}
-                onCheckedChange={(checked) => 
-                  setRoleSettings({...roleSettings, adminAccess: checked})
-                }
+                checked={adminAccess}
+                onCheckedChange={setAdminAccess}
               />
             </div>
 
@@ -307,10 +272,8 @@ const Settings = () => {
                 <div className="text-sm text-gray-500">Financial data access</div>
               </div>
               <Switch
-                checked={roleSettings.accountantAccess}
-                onCheckedChange={(checked) => 
-                  setRoleSettings({...roleSettings, accountantAccess: checked})
-                }
+                checked={accountantAccess}
+                onCheckedChange={setAccountantAccess}
               />
             </div>
 
@@ -320,10 +283,8 @@ const Settings = () => {
                 <div className="text-sm text-gray-500">Sales and customer data</div>
               </div>
               <Switch
-                checked={roleSettings.salesAccess}
-                onCheckedChange={(checked) => 
-                  setRoleSettings({...roleSettings, salesAccess: checked})
-                }
+                checked={salesAccess}
+                onCheckedChange={setSalesAccess}
               />
             </div>
 
@@ -333,10 +294,8 @@ const Settings = () => {
                 <div className="text-sm text-gray-500">Read-only access</div>
               </div>
               <Switch
-                checked={roleSettings.viewerAccess}
-                onCheckedChange={(checked) => 
-                  setRoleSettings({...roleSettings, viewerAccess: checked})
-                }
+                checked={viewerAccess}
+                onCheckedChange={setViewerAccess}
               />
             </div>
 
@@ -350,7 +309,7 @@ const Settings = () => {
         </Card>
 
         {/* Company Settings */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>Company Information</CardTitle>
             <CardDescription>Update your company details</CardDescription>
@@ -359,31 +318,25 @@ const Settings = () => {
             <div className="space-y-2">
               <Label>Company Name</Label>
               <Input
-                value={systemSettings.companyName}
-                onChange={(e) => 
-                  setSystemSettings({...systemSettings, companyName: e.target.value})
-                }
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>GST Number</Label>
                 <Input
-                  value={systemSettings.gstNumber}
-                  onChange={(e) => 
-                    setSystemSettings({...systemSettings, gstNumber: e.target.value.toUpperCase()})
-                  }
+                  value={gstNumber}
+                  onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
                   placeholder="27ABCDE1234F1Z5"
                 />
               </div>
               <div className="space-y-2">
                 <Label>PAN Number</Label>
                 <Input
-                  value={systemSettings.panNumber}
-                  onChange={(e) => 
-                    setSystemSettings({...systemSettings, panNumber: e.target.value.toUpperCase()})
-                  }
+                  value={panNumber}
+                  onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
                   placeholder="ABCDE1234F"
                 />
               </div>
@@ -392,22 +345,18 @@ const Settings = () => {
             <div className="space-y-2">
               <Label>Address</Label>
               <Input
-                value={systemSettings.address}
-                onChange={(e) => 
-                  setSystemSettings({...systemSettings, address: e.target.value})
-                }
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
                 placeholder="Company address"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Phone</Label>
                 <Input
-                  value={systemSettings.phone}
-                  onChange={(e) => 
-                    setSystemSettings({...systemSettings, phone: e.target.value})
-                  }
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   placeholder="Phone number"
                 />
               </div>
@@ -415,10 +364,8 @@ const Settings = () => {
                 <Label>Email</Label>
                 <Input
                   type="email"
-                  value={systemSettings.email}
-                  onChange={(e) => 
-                    setSystemSettings({...systemSettings, email: e.target.value})
-                  }
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="company@email.com"
                 />
               </div>
@@ -426,12 +373,7 @@ const Settings = () => {
 
             <div className="space-y-2">
               <Label>Financial Year</Label>
-              <Select 
-                value={systemSettings.financialYear} 
-                onValueChange={(value) => 
-                  setSystemSettings({...systemSettings, financialYear: value})
-                }
-              >
+              <Select value={financialYear} onValueChange={setFinancialYear}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

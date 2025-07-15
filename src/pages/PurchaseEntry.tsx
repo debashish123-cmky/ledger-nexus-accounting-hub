@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Trash2, Save, Calculator, ShoppingCart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { usePurchase } from '@/contexts/PurchaseContext';
+import PrintInvoice from '@/components/PrintInvoice';
 
 interface PurchaseItem {
   id: string;
@@ -140,7 +141,7 @@ const PurchaseEntry = () => {
     const { subtotal, totalGST, grandTotal } = calculateTotals();
     
     // Calculate GST breakdown based on vendor state
-    const isIntraState = invoiceData.vendorState.toLowerCase() === 'your-state'; // You can adjust this logic
+    const isIntraState = invoiceData.vendorState.toLowerCase() === 'your-state';
     const cgst = isIntraState ? totalGST / 2 : 0;
     const sgst = isIntraState ? totalGST / 2 : 0;
     const igst = isIntraState ? 0 : totalGST;
@@ -158,7 +159,7 @@ const PurchaseEntry = () => {
       sgst,
       igst,
       total: grandTotal,
-      items: items // Use the full item structure
+      items: items
     };
 
     // Add to context
@@ -209,10 +210,19 @@ const PurchaseEntry = () => {
           <ShoppingCart className="h-6 w-6 text-purple-600" />
           <h2 className="text-2xl font-bold">Purchase Entry</h2>
         </div>
-        <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-          <Save className="h-4 w-4 mr-2" />
-          Save Purchase
-        </Button>
+        <div className="flex space-x-2">
+          {invoiceData.invoiceNo && items.some(item => item.description) && (
+            <PrintInvoice 
+              invoiceData={invoiceData}
+              items={items}
+              totals={{ subtotal, totalGST, grandTotal }}
+            />
+          )}
+          <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+            <Save className="h-4 w-4 mr-2" />
+            Save Purchase
+          </Button>
+        </div>
       </div>
 
       {/* Invoice Header */}
