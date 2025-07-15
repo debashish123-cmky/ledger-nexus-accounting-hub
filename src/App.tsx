@@ -23,6 +23,8 @@ import PurchaseReport from "./pages/PurchaseReport";
 import SalesReport from "./pages/SalesReport";
 import LedgerView from "./pages/LedgerView";
 import Settings from "./pages/Settings";
+import SalesPage from "./pages/SalesPage";
+import AccountantPage from "./pages/AccountantPage";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +55,20 @@ const App = () => (
                   <ProtectedRoute>
                     <Layout>
                       <Dashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/sales-dashboard" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <SalesPage />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/accountant-dashboard" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AccountantPage />
                     </Layout>
                   </ProtectedRoute>
                 } />
