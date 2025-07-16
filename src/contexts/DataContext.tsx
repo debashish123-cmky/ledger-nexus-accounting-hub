@@ -19,20 +19,26 @@ export interface Client {
   name: string;
   email: string;
   phone: string;
-  company: string;
+  address: string;
+  gstNumber: string;
   status: 'active' | 'inactive';
+  totalPurchases: number;
+  lastPurchase: string;
   createdAt: string;
 }
 
 export interface Vendor {
   id: string;
+  vendorNumber: string;
   name: string;
   email: string;
   phone: string;
-  company: string;
-  gstNumber: string;
   address: string;
+  gstNumber: string;
   status: 'active' | 'inactive';
+  category: string;
+  totalSupplied: number;
+  lastSupply: string;
   createdAt: string;
 }
 
@@ -51,12 +57,30 @@ export interface Product {
   revenue: number;
 }
 
+export interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
+  createdAt: string;
+}
+
+export interface Account {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
+
 interface DataContextType {
   customers: Customer[];
   clients: Client[];
   vendors: Vendor[];
   sales: Sale[];
   products: Product[];
+  roles: Role[];
+  accounts: Account[];
   addCustomer: (customer: Customer) => void;
   updateCustomer: (id: string, customer: Customer) => void;
   deleteCustomer: (id: string) => void;
@@ -72,6 +96,12 @@ interface DataContextType {
   addProduct: (product: Product) => void;
   updateProduct: (id: string, product: Product) => void;
   deleteProduct: (id: string) => void;
+  addRole: (role: Role) => void;
+  updateRole: (id: string, role: Role) => void;
+  deleteRole: (id: string) => void;
+  addAccount: (account: Account) => void;
+  updateAccount: (id: string, account: Account) => void;
+  deleteAccount: (id: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -90,6 +120,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
 
   const addCustomer = (customer: Customer) => {
     setCustomers(prev => [...prev, customer]);
@@ -151,6 +183,30 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setProducts(prev => prev.filter(p => p.id !== id));
   };
 
+  const addRole = (role: Role) => {
+    setRoles(prev => [...prev, role]);
+  };
+
+  const updateRole = (id: string, role: Role) => {
+    setRoles(prev => prev.map(r => r.id === id ? role : r));
+  };
+
+  const deleteRole = (id: string) => {
+    setRoles(prev => prev.filter(r => r.id !== id));
+  };
+
+  const addAccount = (account: Account) => {
+    setAccounts(prev => [...prev, account]);
+  };
+
+  const updateAccount = (id: string, account: Account) => {
+    setAccounts(prev => prev.map(a => a.id === id ? account : a));
+  };
+
+  const deleteAccount = (id: string) => {
+    setAccounts(prev => prev.filter(a => a.id !== id));
+  };
+
   return (
     <DataContext.Provider value={{
       customers,
@@ -158,6 +214,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       vendors,
       sales,
       products,
+      roles,
+      accounts,
       addCustomer,
       updateCustomer,
       deleteCustomer,
@@ -172,7 +230,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       deleteSale,
       addProduct,
       updateProduct,
-      deleteProduct
+      deleteProduct,
+      addRole,
+      updateRole,
+      deleteRole,
+      addAccount,
+      updateAccount,
+      deleteAccount
     }}>
       {children}
     </DataContext.Provider>
