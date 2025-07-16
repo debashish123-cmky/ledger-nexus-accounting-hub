@@ -25,44 +25,10 @@ interface Client {
 
 const ClientManagement = () => {
   const { t } = useSettings();
-  const [clients, setClients] = useState<Client[]>([
-    {
-      id: '1',
-      name: 'ABC Corp Ltd',
-      email: 'contact@abccorp.com',
-      phone: '+91 98765 43210',
-      address: '123 Business Park, Mumbai, Maharashtra 400001',
-      gstNumber: '27AABCU9603R1ZX',
-      status: 'active',
-      totalPurchases: 125000,
-      lastPurchase: '2024-01-15'
-    },
-    {
-      id: '2',
-      name: 'XYZ Enterprises',
-      email: 'info@xyzenterprises.in',
-      phone: '+91 88776 65432',
-      address: '456 Innovation Hub, Bangalore, Karnataka 560001',
-      gstNumber: '29XYZPD8765Q2ZA',
-      status: 'active',
-      totalPurchases: 280000,
-      lastPurchase: '2024-02-01'
-    },
-    {
-      id: '3',
-      name: 'Global Solutions Pvt Ltd',
-      email: 'support@globalsolutions.net',
-      phone: '+91 77665 54321',
-      address: '789 Tech Square, Hyderabad, Telangana 500001',
-      gstNumber: '36GSPLE5432A3RT',
-      status: 'inactive',
-      totalPurchases: 85000,
-      lastPurchase: '2023-12-20'
-    },
-  ]);
-
+  const [clients, setClients] = useState<Client[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [newClient, setNewClient] = useState<{
     name: string;
     email: string;
@@ -88,9 +54,54 @@ const ClientManagement = () => {
   );
 
   const handleAddClient = () => {
-    const newId = Math.random().toString(36).substring(7);
-    setClients([...clients, { id: newId, ...newClient, totalPurchases: 0, lastPurchase: 'N/A' }]);
-    setNewClient({ name: '', email: '', phone: '', address: '', gstNumber: '', status: 'active' });
+    const newId = Date.now().toString();
+    const clientData: Client = { 
+      id: newId, 
+      ...newClient, 
+      totalPurchases: 0, 
+      lastPurchase: 'N/A' 
+    };
+    setClients([...clients, clientData]);
+    resetForm();
+  };
+
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client);
+    setNewClient({
+      name: client.name,
+      email: client.email,
+      phone: client.phone,
+      address: client.address,
+      gstNumber: client.gstNumber,
+      status: client.status
+    });
+    setIsAddDialogOpen(true);
+  };
+
+  const handleUpdateClient = () => {
+    if (!editingClient) return;
+    
+    const updatedClient: Client = {
+      ...editingClient,
+      ...newClient
+    };
+    
+    setClients(clients.map(client => 
+      client.id === editingClient.id ? updatedClient : client
+    ));
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setNewClient({ 
+      name: '', 
+      email: '', 
+      phone: '', 
+      address: '', 
+      gstNumber: '', 
+      status: 'active' 
+    });
+    setEditingClient(null);
     setIsAddDialogOpen(false);
   };
 
@@ -102,7 +113,10 @@ const ClientManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-foreground">{t('clients')}</h1>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) resetForm();
+        }}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
@@ -111,32 +125,65 @@ const ClientManagement = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('add')} {t('clients')}</DialogTitle>
+              <DialogTitle>
+                {editingClient ? `${t('edit')} ${t('clients')}` : `${t('add')} ${t('clients')}`}
+              </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">{t('companyName')}</Label>
-                <Input id="name" value={newClient.name} onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} className="col-span-3" />
+                <Input 
+                  id="name" 
+                  value={newClient.name} 
+                  onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} 
+                  className="col-span-3" 
+                  placeholder="Enter company name"
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">Email</Label>
-                <Input id="email" type="email" value={newClient.email} onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} className="col-span-3" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={newClient.email} 
+                  onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} 
+                  className="col-span-3" 
+                  placeholder="Enter email address"
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="phone" className="text-right">{t('phone')}</Label>
-                <Input id="phone" value={newClient.phone} onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} className="col-span-3" />
+                <Input 
+                  id="phone" 
+                  value={newClient.phone} 
+                  onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} 
+                  className="col-span-3" 
+                  placeholder="Enter phone number"
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="address" className="text-right">{t('address')}</Label>
-                <Input id="address" value={newClient.address} onChange={(e) => setNewClient({ ...newClient, address: e.target.value })} className="col-span-3" />
+                <Input 
+                  id="address" 
+                  value={newClient.address} 
+                  onChange={(e) => setNewClient({ ...newClient, address: e.target.value })} 
+                  className="col-span-3" 
+                  placeholder="Enter address"
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="gst" className="text-right">{t('gstNumber')}</Label>
-                <Input id="gst" value={newClient.gstNumber} onChange={(e) => setNewClient({ ...newClient, gstNumber: e.target.value })} className="col-span-3" />
+                <Input 
+                  id="gst" 
+                  value={newClient.gstNumber} 
+                  onChange={(e) => setNewClient({ ...newClient, gstNumber: e.target.value })} 
+                  className="col-span-3" 
+                  placeholder="Enter GST number"
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="status" className="text-right">Status</Label>
-                <Select onValueChange={(value: string) => setNewClient({ ...newClient, status: value as 'active' | 'inactive' })}>
+                <Select value={newClient.status} onValueChange={(value: string) => setNewClient({ ...newClient, status: value as 'active' | 'inactive' })}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -147,9 +194,11 @@ const ClientManagement = () => {
                 </Select>
               </div>
             </div>
-            <div className="flex justify-end">
-              <Button type="button" variant="secondary" onClick={() => setIsAddDialogOpen(false)}>{t('cancel')}</Button>
-              <Button type="submit" onClick={handleAddClient}>{t('save')}</Button>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={resetForm}>{t('cancel')}</Button>
+              <Button type="submit" onClick={editingClient ? handleUpdateClient : handleAddClient}>
+                {editingClient ? t('update') : t('save')}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -193,13 +242,13 @@ const ClientManagement = () => {
                 {client.gstNumber}
               </div>
               <div className="text-sm text-muted-foreground">
-                <span className="font-medium">Total Purchases:</span> ₹{client.totalPurchases}
+                <span className="font-medium">Total Purchases:</span> ₹{client.totalPurchases.toLocaleString('en-IN')}
               </div>
               <div className="text-sm text-muted-foreground">
                 <span className="font-medium">Last Purchase:</span> {client.lastPurchase}
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={() => handleEditClient(client)}>
                   <Edit className="h-4 w-4 mr-2" />
                   {t('edit')}
                 </Button>
@@ -212,6 +261,12 @@ const ClientManagement = () => {
           </Card>
         ))}
       </div>
+
+      {filteredClients.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No clients found. Add your first client to get started.</p>
+        </div>
+      )}
     </div>
   );
 };
