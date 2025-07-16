@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,7 +129,7 @@ const ClientManagement = () => {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="status" className="text-right">Status</Label>
-                <Select onValueChange={(value) => setNewClient({ ...newClient, status: value as 'active' | 'inactive' })}>
+                <Select onValueChange={(value: string) => setNewClient({ ...newClient, status: value as 'active' | 'inactive' })}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -137,7 +138,7 @@ const VendorManagement = () => {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="status" className="text-right">Status</Label>
-                <Select value={newVendor.status} onValueChange={(value) => setNewVendor({ ...newVendor, status: value as 'active' | 'inactive' })}>
+                <Select value={newVendor.status} onValueChange={(value: string) => setNewVendor({ ...newVendor, status: value as 'active' | 'inactive' })}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
