@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { PurchaseProvider } from './contexts/PurchaseContext';
+import { DataProvider } from './contexts/DataContext';
 import { Toaster } from './components/ui/toaster';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
@@ -174,12 +175,14 @@ function App() {
     <AuthProvider>
       <SettingsProvider>
         <PurchaseProvider>
-          <Router>
-            <div className="App">
-              <AppRoutes />
-              <Toaster />
-            </div>
-          </Router>
+          <DataProvider>
+            <Router>
+              <div className="App">
+                <AppRoutes />
+                <Toaster />
+              </div>
+            </Router>
+          </DataProvider>
         </PurchaseProvider>
       </SettingsProvider>
     </AuthProvider>

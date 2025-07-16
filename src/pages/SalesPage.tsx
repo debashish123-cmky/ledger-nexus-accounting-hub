@@ -3,39 +3,74 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Users, TrendingUp, DollarSign, Search, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { ShoppingCart, Users, TrendingUp, DollarSign, Plus, Edit, Trash2 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useData } from '@/contexts/DataContext';
 import VoiceToText from '@/components/VoiceToText';
 
 const SalesPage = () => {
-  const { t, language } = useSettings();
+  const { language } = useSettings();
+  const { sales, products, customers, addSale, updateSale, deleteSale, addProduct, updateProduct, deleteProduct } = useData();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isNewSaleOpen, setIsNewSaleOpen] = useState(false);
+  const [editingSale, setEditingSale] = useState<any>(null);
+  const [newSale, setNewSale] = useState({
+    customer: '',
+    amount: '',
+    status: 'Pending' as 'Completed' | 'Pending' | 'Processing'
+  });
 
-  const salesData = {
-    todaySales: 15420,
-    monthlySales: 234560,
-    totalCustomers: 1247,
-    avgOrderValue: 3240
-  };
+  // Calculate sales metrics from actual data
+  const todaySales = sales
+    .filter(sale => new Date(sale.date).toDateString() === new Date().toDateString())
+    .reduce((sum, sale) => sum + sale.amount, 0);
 
-  const recentSales = [
-    { id: 1, customer: 'John Doe', amount: 1250, status: 'Completed', date: '2024-01-15' },
-    { id: 2, customer: 'Jane Smith', amount: 890, status: 'Pending', date: '2024-01-15' },
-    { id: 3, customer: 'Bob Johnson', amount: 2340, status: 'Completed', date: '2024-01-14' },
-    { id: 4, customer: 'Alice Brown', amount: 1560, status: 'Processing', date: '2024-01-14' }
-  ];
+  const monthlySales = sales
+    .filter(sale => {
+      const saleDate = new Date(sale.date);
+      const now = new Date();
+      return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
+    })
+    .reduce((sum, sale) => sum + sale.amount, 0);
 
-  const topProducts = [
-    { name: 'Product A', sales: 45, revenue: 12400 },
-    { name: 'Product B', sales: 32, revenue: 8960 },
-    { name: 'Product C', sales: 28, revenue: 7840 },
-    { name: 'Product D', sales: 21, revenue: 5880 }
-  ];
+  const totalCustomers = customers.length;
+  const avgOrderValue = sales.length > 0 ? sales.reduce((sum, sale) => sum + sale.amount, 0) / sales.length : 0;
 
   const handleVoiceSearch = (text: string) => {
     setSearchTerm(text);
+  };
+
+  const handleAddSale = () => {
+    const sale = {
+      id: Date.now().toString(),
+      customer: newSale.customer,
+      amount: parseFloat(newSale.amount) || 0,
+      status: newSale.status,
+      date: new Date().toISOString()
+    };
+
+    if (editingSale) {
+      updateSale(editingSale.id, sale);
+      setEditingSale(null);
+    } else {
+      addSale(sale);
+    }
+
+    setNewSale({ customer: '', amount: '', status: 'Pending' });
+    setIsNewSaleOpen(false);
+  };
+
+  const handleEditSale = (sale: any) => {
+    setEditingSale(sale);
+    setNewSale({
+      customer: sale.customer,
+      amount: sale.amount.toString(),
+      status: sale.status
+    });
+    setIsNewSaleOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -68,10 +103,54 @@ const SalesPage = () => {
               placeholder="Search with voice"
             />
           </div>
-          <Button className="bg-green-600 hover:bg-green-700">
-            <Plus className="h-4 w-4 mr-2" />
-            New Sale
-          </Button>
+          <Dialog open={isNewSaleOpen} onOpenChange={(open) => {
+            setIsNewSaleOpen(open);
+            if (!open) {
+              setEditingSale(null);
+              setNewSale({ customer: '', amount: '', status: 'Pending' });
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button className="bg-green-600 hover:bg-green-700">
+                <Plus className="h-4 w-4 mr-2" />
+                New Sale
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingSale ? 'Edit Sale' : 'Add New Sale'}</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="customer" className="text-right">Customer</Label>
+                  <Input 
+                    id="customer" 
+                    value={newSale.customer} 
+                    onChange={(e) => setNewSale({ ...newSale, customer: e.target.value })} 
+                    className="col-span-3" 
+                    placeholder="Enter customer name"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="amount" className="text-right">Amount</Label>
+                  <Input 
+                    id="amount" 
+                    type="number" 
+                    value={newSale.amount} 
+                    onChange={(e) => setNewSale({ ...newSale, amount: e.target.value })} 
+                    className="col-span-3" 
+                    placeholder="Enter amount"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="secondary" onClick={() => setIsNewSaleOpen(false)}>Cancel</Button>
+                <Button type="submit" onClick={handleAddSale}>
+                  {editingSale ? 'Update' : 'Save'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -83,8 +162,8 @@ const SalesPage = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{salesData.todaySales.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+12% from yesterday</p>
+            <div className="text-2xl font-bold">₹{todaySales.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Real-time data</p>
           </CardContent>
         </Card>
 
@@ -94,8 +173,8 @@ const SalesPage = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{salesData.monthlySales.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+8% from last month</p>
+            <div className="text-2xl font-bold">₹{monthlySales.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
 
@@ -105,8 +184,8 @@ const SalesPage = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{salesData.totalCustomers}</div>
-            <p className="text-xs text-muted-foreground">+15 new this month</p>
+            <div className="text-2xl font-bold">{totalCustomers}</div>
+            <p className="text-xs text-muted-foreground">Active customers</p>
           </CardContent>
         </Card>
 
@@ -116,8 +195,8 @@ const SalesPage = () => {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{salesData.avgOrderValue}</div>
-            <p className="text-xs text-muted-foreground">+5% from last month</p>
+            <div className="text-2xl font-bold">₹{Math.round(avgOrderValue).toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Average per sale</p>
           </CardContent>
         </Card>
       </div>
@@ -131,20 +210,32 @@ const SalesPage = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentSales.map((sale) => (
-                <div key={sale.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-semibold">{sale.customer}</div>
-                    <div className="text-sm text-gray-500">{sale.date}</div>
+              {sales.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No sales recorded yet</p>
+              ) : (
+                sales.slice(-5).reverse().map((sale) => (
+                  <div key={sale.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <div className="font-semibold">{sale.customer}</div>
+                      <div className="text-sm text-gray-500">{new Date(sale.date).toLocaleDateString()}</div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="font-bold">₹{sale.amount}</div>
+                      <Badge className={getStatusColor(sale.status)}>
+                        {sale.status}
+                      </Badge>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditSale(sale)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-600" onClick={() => deleteSale(sale.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="font-bold">₹{sale.amount}</div>
-                    <Badge className={getStatusColor(sale.status)}>
-                      {sale.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -157,20 +248,34 @@ const SalesPage = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topProducts.map((product, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-green-600 font-bold">{index + 1}</span>
+              {products.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No products added yet</p>
+              ) : (
+                products.slice(0, 4).map((product, index) => (
+                  <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <span className="text-green-600 font-bold">{index + 1}</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold">{product.name}</div>
+                        <div className="text-sm text-gray-500">{product.sales} units sold</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-semibold">{product.name}</div>
-                      <div className="text-sm text-gray-500">{product.sales} units sold</div>
+                    <div className="flex items-center gap-2">
+                      <div className="font-bold">₹{product.revenue.toLocaleString()}</div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => {/* Add edit product logic */}}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-600" onClick={() => deleteProduct(product.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <div className="font-bold">₹{product.revenue.toLocaleString()}</div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

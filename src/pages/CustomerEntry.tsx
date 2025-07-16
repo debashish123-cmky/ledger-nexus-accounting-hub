@@ -6,30 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Phone, Mail, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
+import { useData, Customer } from '@/contexts/DataContext';
 import SearchWithVoice from '@/components/SearchWithVoice';
-
-interface CustomerEntry {
-  id: string;
-  customerName: string;
-  phoneNo: string;
-  taxableAmt: number;
-  cgst: number;
-  sgst: number;
-  igst: number;
-  total: number;
-  invoices: number;
-  createdAt: string;
-}
 
 const CustomerEntry = () => {
   const { t } = useSettings();
-  const [customers, setCustomers] = useState<CustomerEntry[]>([]);
+  const { customers, addCustomer, updateCustomer, deleteCustomer } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<CustomerEntry | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [newCustomer, setNewCustomer] = useState<{
     customerName: string;
     phoneNo: string;
@@ -58,7 +45,7 @@ const CustomerEntry = () => {
     const igst = parseFloat(newCustomer.igst) || 0;
     const total = taxableAmt + cgst + sgst + igst;
 
-    const customerEntry: CustomerEntry = {
+    const customerEntry: Customer = {
       id: Date.now().toString(),
       customerName: newCustomer.customerName,
       phoneNo: newCustomer.phoneNo,
@@ -71,19 +58,11 @@ const CustomerEntry = () => {
       createdAt: new Date().toISOString()
     };
 
-    setCustomers([...customers, customerEntry]);
-    setNewCustomer({
-      customerName: '',
-      phoneNo: '',
-      taxableAmt: '',
-      cgst: '',
-      sgst: '',
-      igst: ''
-    });
-    setIsAddDialogOpen(false);
+    addCustomer(customerEntry);
+    resetForm();
   };
 
-  const handleEditCustomer = (customer: CustomerEntry) => {
+  const handleEditCustomer = (customer: Customer) => {
     setEditingCustomer(customer);
     setNewCustomer({
       customerName: customer.customerName,
@@ -105,7 +84,7 @@ const CustomerEntry = () => {
     const igst = parseFloat(newCustomer.igst) || 0;
     const total = taxableAmt + cgst + sgst + igst;
 
-    const updatedCustomer: CustomerEntry = {
+    const updatedCustomer: Customer = {
       ...editingCustomer,
       customerName: newCustomer.customerName,
       phoneNo: newCustomer.phoneNo,
@@ -116,7 +95,11 @@ const CustomerEntry = () => {
       total
     };
 
-    setCustomers(customers.map(c => c.id === editingCustomer.id ? updatedCustomer : c));
+    updateCustomer(editingCustomer.id, updatedCustomer);
+    resetForm();
+  };
+
+  const resetForm = () => {
     setEditingCustomer(null);
     setNewCustomer({
       customerName: '',
@@ -130,7 +113,7 @@ const CustomerEntry = () => {
   };
 
   const handleDeleteCustomer = (id: string) => {
-    setCustomers(customers.filter(customer => customer.id !== id));
+    deleteCustomer(id);
   };
 
   return (
@@ -140,15 +123,7 @@ const CustomerEntry = () => {
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
           setIsAddDialogOpen(open);
           if (!open) {
-            setEditingCustomer(null);
-            setNewCustomer({
-              customerName: '',
-              phoneNo: '',
-              taxableAmt: '',
-              cgst: '',
-              sgst: '',
-              igst: ''
-            });
+            resetForm();
           }
         }}>
           <DialogTrigger asChild>
