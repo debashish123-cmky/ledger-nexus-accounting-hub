@@ -63,13 +63,20 @@ const ClientManagement = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newClient, setNewClient] = useState({
+  const [newClient, setNewClient] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    gstNumber: string;
+    status: 'active' | 'inactive';
+  }>({
     name: '',
     email: '',
     phone: '',
     address: '',
     gstNumber: '',
-    status: 'active' as const
+    status: 'active'
   });
 
   const filteredClients = clients.filter(client =>

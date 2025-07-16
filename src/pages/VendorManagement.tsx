@@ -67,13 +67,21 @@ const VendorManagement = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newVendor, setNewVendor] = useState({
+  const [newVendor, setNewVendor] = useState<{
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    gstNumber: string;
+    status: 'active' | 'inactive';
+    category: string;
+  }>({
     name: '',
     email: '',
     phone: '',
     address: '',
     gstNumber: '',
-    status: 'active' as const,
+    status: 'active',
     category: ''
   });
 
