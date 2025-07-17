@@ -9,16 +9,14 @@ import { Label } from '@/components/ui/label';
 import { ShoppingCart, Users, TrendingUp, DollarSign, Plus, Edit, Trash2, Download, FileText, BarChart3 } from 'lucide-react';
 import { useSettings } from '@/contexts/SettingsContext';
 import { useData } from '@/contexts/DataContext';
-import VoiceToText from '@/components/VoiceToText';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 const SalesPage = () => {
   const { language } = useSettings();
-  const { sales, products, customers, addSale, updateSale, deleteSale, addCustomer } = useData();
+  const { sales, customers, addSale, updateSale, deleteSale } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewSaleOpen, setIsNewSaleOpen] = useState(false);
-  const [isNewCustomerOpen, setIsNewCustomerOpen] = useState(false);
   const [showCustomerList, setShowCustomerList] = useState(false);
   const [showSalesReport, setShowSalesReport] = useState(false);
   const [editingSale, setEditingSale] = useState<any>(null);
@@ -26,16 +24,6 @@ const SalesPage = () => {
     customer: '',
     amount: '',
     status: 'Pending' as 'Completed' | 'Pending' | 'Processing'
-  });
-  const [newCustomer, setNewCustomer] = useState({
-    customerName: '',
-    phoneNo: '',
-    taxableAmt: '',
-    cgst: '',
-    sgst: '',
-    igst: '',
-    total: '',
-    invoices: ''
   });
 
   // Calculate sales metrics from actual data
@@ -54,19 +42,28 @@ const SalesPage = () => {
   const totalCustomers = customers.length;
   const avgOrderValue = sales.length > 0 ? sales.reduce((sum, sale) => sum + sale.amount, 0) / sales.length : 0;
 
-  // Generate chart data for sales report
-  const chartData = [
-    { month: 'Jan', sales: 12000 },
-    { month: 'Feb', sales: 19000 },
-    { month: 'Mar', sales: 15000 },
-    { month: 'Apr', sales: 25000 },
-    { month: 'May', sales: 22000 },
-    { month: 'Jun', sales: 30000 },
-  ];
+  // Generate real-time chart data from actual sales
+  const generateChartData = () => {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    const chartData = [];
 
-  const handleVoiceSearch = (text: string) => {
-    setSearchTerm(text);
+    for (let i = 0; i < 12; i++) {
+      const monthSales = sales.filter(sale => {
+        const saleDate = new Date(sale.date);
+        return saleDate.getMonth() === i && saleDate.getFullYear() === currentYear;
+      }).reduce((sum, sale) => sum + sale.amount, 0);
+
+      chartData.push({
+        month: monthNames[i],
+        sales: monthSales
+      });
+    }
+
+    return chartData;
   };
+
+  const chartData = generateChartData();
 
   const handleAddSale = () => {
     const sale = {
@@ -86,34 +83,6 @@ const SalesPage = () => {
 
     setNewSale({ customer: '', amount: '', status: 'Pending' });
     setIsNewSaleOpen(false);
-  };
-
-  const handleAddCustomer = () => {
-    const customer = {
-      id: Date.now().toString(),
-      customerName: newCustomer.customerName,
-      phoneNo: newCustomer.phoneNo,
-      taxableAmt: parseFloat(newCustomer.taxableAmt) || 0,
-      cgst: parseFloat(newCustomer.cgst) || 0,
-      sgst: parseFloat(newCustomer.sgst) || 0,
-      igst: parseFloat(newCustomer.igst) || 0,
-      total: parseFloat(newCustomer.total) || 0,
-      invoices: parseInt(newCustomer.invoices) || 0,
-      createdAt: new Date().toISOString()
-    };
-
-    addCustomer(customer);
-    setNewCustomer({
-      customerName: '',
-      phoneNo: '',
-      taxableAmt: '',
-      cgst: '',
-      sgst: '',
-      igst: '',
-      total: '',
-      invoices: ''
-    });
-    setIsNewCustomerOpen(false);
   };
 
   const handleEditSale = (sale: any) => {
@@ -163,7 +132,7 @@ const SalesPage = () => {
         <Card>
           <CardHeader>
             <CardTitle>Monthly Sales Trend</CardTitle>
-            <CardDescription>Sales performance over the last 6 months</CardDescription>
+            <CardDescription>Real-time sales performance for {new Date().getFullYear()}</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -183,6 +152,34 @@ const SalesPage = () => {
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="sales" fill="var(--color-sales)" />
                 </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sales Trend Line</CardTitle>
+            <CardDescription>Monthly sales progression</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                sales: {
+                  label: "Sales",
+                  color: "hsl(var(--chart-2))",
+                },
+              }}
+              className="h-[300px]"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line type="monotone" dataKey="sales" stroke="var(--color-sales)" strokeWidth={2} />
+                </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
@@ -260,11 +257,6 @@ const SalesPage = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-64"
-            />
-            <VoiceToText 
-              onTranscript={handleVoiceSearch}
-              language={language}
-              placeholder="Search with voice"
             />
           </div>
           <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
@@ -408,41 +400,44 @@ const SalesPage = () => {
           </CardContent>
         </Card>
 
-        {/* Top Products */}
+        {/* Top Customers */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Selling Products</CardTitle>
-            <CardDescription>Best performing products this month</CardDescription>
+            <CardTitle>Top Customers</CardTitle>
+            <CardDescription>Customers with highest total purchases</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {products.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No products added yet</p>
+              {customers.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No customers added yet</p>
               ) : (
-                products.slice(0, 4).map((product, index) => (
-                  <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-green-600 font-bold">{index + 1}</span>
+                customers
+                  .sort((a, b) => b.total - a.total)
+                  .slice(0, 4)
+                  .map((customer, index) => (
+                    <div key={customer.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <span className="text-green-600 font-bold">{index + 1}</span>
+                        </div>
+                        <div>
+                          <div className="font-semibold">{customer.customerName}</div>
+                          <div className="text-sm text-gray-500">{customer.phoneNo}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-semibold">{product.name}</div>
-                        <div className="text-sm text-gray-500">{product.sales} units sold</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-bold">₹{customer.total.toLocaleString()}</div>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="font-bold">₹{product.revenue.toLocaleString()}</div>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-red-600">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                  ))
               )}
             </div>
           </CardContent>
@@ -456,69 +451,7 @@ const SalesPage = () => {
           <CardDescription>Frequently used sales operations</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Dialog open={isNewCustomerOpen} onOpenChange={setIsNewCustomerOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="h-20 flex-col">
-                  <Plus className="h-6 w-6 mb-2" />
-                  New Customer
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Customer</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="customerName" className="text-right">Customer Name</Label>
-                    <Input 
-                      id="customerName" 
-                      value={newCustomer.customerName} 
-                      onChange={(e) => setNewCustomer({ ...newCustomer, customerName: e.target.value })} 
-                      className="col-span-3" 
-                      placeholder="Enter customer name"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="phoneNo" className="text-right">Phone No</Label>
-                    <Input 
-                      id="phoneNo" 
-                      value={newCustomer.phoneNo} 
-                      onChange={(e) => setNewCustomer({ ...newCustomer, phoneNo: e.target.value })} 
-                      className="col-span-3" 
-                      placeholder="Enter phone number"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="taxableAmt" className="text-right">Taxable Amt</Label>
-                    <Input 
-                      id="taxableAmt" 
-                      type="number"
-                      value={newCustomer.taxableAmt} 
-                      onChange={(e) => setNewCustomer({ ...newCustomer, taxableAmt: e.target.value })} 
-                      className="col-span-3" 
-                      placeholder="Enter taxable amount"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="total" className="text-right">Total</Label>
-                    <Input 
-                      id="total" 
-                      type="number"
-                      value={newCustomer.total} 
-                      onChange={(e) => setNewCustomer({ ...newCustomer, total: e.target.value })} 
-                      className="col-span-3" 
-                      placeholder="Enter total amount"
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="secondary" onClick={() => setIsNewCustomerOpen(false)}>Cancel</Button>
-                  <Button type="submit" onClick={handleAddCustomer}>Save</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Button variant="outline" className="h-20 flex-col">
               <FileText className="h-6 w-6 mb-2" />
               Create Invoice

@@ -1,135 +1,160 @@
 
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
+  Home, 
   ShoppingCart, 
-  Package, 
   Users, 
-  FileText, 
+  Package, 
+  TrendingUp, 
   Settings, 
+  Menu, 
+  X, 
   LogOut,
-  Calendar,
-  TrendingUp,
-  CreditCard,
-  Building2,
-  UserPlus,
-  Store,
+  FileText,
+  Truck,
+  BarChart,
+  Calculator,
   Receipt,
   Clock,
-  AlertTriangle,
-  FileSpreadsheet,
-  Truck,
-  DollarSign,
-  BarChart3
+  CreditCard,
+  BookOpen,
+  User
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useSettings } from '@/contexts/SettingsContext';
+import { Button } from './ui/button';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const { t } = useSettings();
-
-  const navigation = [
-    { name: t('dashboard'), href: '/', icon: LayoutDashboard },
-    { name: t('sales'), href: '/sales', icon: ShoppingCart },
-    { name: 'Customer Entry', href: '/customer-entry', icon: UserPlus },
-    { name: t('purchaseEntry'), href: '/purchase-entry', icon: Package },
-    { name: t('purchaseOrder'), href: '/purchase-order', icon: Receipt },
-    { name: t('clients'), href: '/clients', icon: Users },
-    { name: t('vendors'), href: '/vendors', icon: Building2 },
-    { name: 'Stock Management', href: '/stock-management', icon: Store },
-    { name: 'Stock Expiry', href: '/stock-expiry', icon: AlertTriangle },
-    { name: 'Sales Report', href: '/sales-report', icon: BarChart3 },
-    { name: 'Purchase Report', href: '/purchase-report', icon: FileSpreadsheet },
-    { name: 'Invoice Reprint', href: '/invoice-reprint', icon: FileText },
-    { name: 'Vendor Payment', href: '/vendor-payment', icon: DollarSign },
-    { name: "Today's Collection", href: '/todays-collection', icon: TrendingUp },
-    { name: 'Ledger View', href: '/ledger-view', icon: CreditCard },
-    { name: t('settings'), href: '/settings', icon: Settings },
-  ];
 
   const handleLogout = () => {
     logout();
+    navigate('/login');
+  };
+
+  const menuItems = [
+    { icon: Home, label: 'Dashboard', path: '/' },
+    { icon: ShoppingCart, label: 'Sales', path: '/sales' },
+    { icon: User, label: 'Customer Entry', path: '/customer-entry' },
+    { icon: Package, label: 'Purchase Entry', path: '/purchase-entry' },
+    { icon: Users, label: 'Clients', path: '/clients' },
+    { icon: Truck, label: 'Vendors', path: '/vendors' },
+    { icon: Package, label: 'Stock Management', path: '/stock-management' },
+    { icon: Clock, label: 'Stock Expiry', path: '/stock-expiry' },
+    { icon: BarChart, label: 'Sales Report', path: '/sales-report' },
+    { icon: FileText, label: 'Purchase Report', path: '/purchase-report' },
+    { icon: Receipt, label: 'Invoice Reprint', path: '/invoice-reprint' },
+    { icon: CreditCard, label: 'Vendor Payment', path: '/vendor-payment' },
+    { icon: Calculator, label: "Today's Collection", path: '/todays-collection' },
+    { icon: BookOpen, label: 'Ledger View', path: '/ledger-view' },
+    { icon: User, label: 'Accountant', path: '/accountant' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
+  ];
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex h-screen">
-        {/* Sidebar */}
-        <div className="hidden md:flex md:w-64 md:flex-col">
-          <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-card border-r">
-            <div className="flex items-center flex-shrink-0 px-4">
-              <h1 className="text-xl font-bold text-foreground">Business Management</h1>
-            </div>
-            <div className="mt-5 flex-1 flex flex-col">
-              <nav className="flex-1 px-2 pb-4 space-y-1">
-                {navigation.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={cn(
-                        isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                        'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors'
-                      )}
-                    >
-                      <item.icon
-                        className="mr-3 h-5 w-5 flex-shrink-0"
-                        aria-hidden="true"
-                      />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </nav>
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+        <div className="flex items-center justify-between h-16 px-4 bg-blue-600 text-white">
+          <h1 className="text-xl font-bold">Medical Store</h1>
+          <button onClick={toggleSidebar} className="lg:hidden">
+            <X size={24} />
+          </button>
+        </div>
+        
+        <nav className="mt-8">
+          <div className="px-4 space-y-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
               
-              {/* User info and logout at bottom */}
-              <div className="flex-shrink-0 px-2 pb-4">
-                <div className="flex items-center px-2 py-2 text-sm text-muted-foreground">
-                  <div className="mr-3 h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-                    <span className="text-primary-foreground font-medium">
-                      {user?.email?.charAt(0).toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {user?.email || 'User'}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="group flex items-center w-full px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition-colors"
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors ${
+                    isActive ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600' : ''
+                  }`}
+                  onClick={() => setIsSidebarOpen(false)}
                 >
-                  <LogOut className="mr-3 h-5 w-5 flex-shrink-0" />
-                  {t('logout')}
-                </button>
+                  <Icon className="w-5 h-5 mr-3" />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+        
+        <div className="absolute bottom-0 w-full p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-medium">
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </span>
               </div>
+              <span className="text-sm font-medium text-gray-700">
+                {user?.username || 'User'}
+              </span>
             </div>
+            <Button
+              onClick={handleLogout}
+              size="sm"
+              variant="ghost"
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-
-        {/* Main content */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <main className="flex-1 relative overflow-y-auto focus:outline-none">
-            <div className="py-6">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-                {children}
-              </div>
-            </div>
-          </main>
-        </div>
       </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="flex items-center justify-between px-4 py-4">
+            <button
+              onClick={toggleSidebar}
+              className="lg:hidden text-gray-500 hover:text-gray-700"
+            >
+              <Menu size={24} />
+            </button>
+            
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                Welcome, {user?.username || 'User'}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+          <div className="container mx-auto px-4 py-8">
+            {children}
+          </div>
+        </main>
+      </div>
+
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black opacity-50 z-40 lg:hidden"
+          onClick={toggleSidebar}
+        ></div>
+      )}
     </div>
   );
 };

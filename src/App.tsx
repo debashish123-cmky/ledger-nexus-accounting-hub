@@ -12,7 +12,6 @@ import Dashboard from './pages/Dashboard';
 import SalesPage from './pages/SalesPage';
 import CustomerEntry from './pages/CustomerEntry';
 import PurchaseEntry from './pages/PurchaseEntry';
-import PurchaseOrder from './pages/PurchaseOrder';
 import ClientManagement from './pages/ClientManagement';
 import VendorManagement from './pages/VendorManagement';
 import StockManagement from './pages/StockManagement';
@@ -71,13 +70,6 @@ function AppRoutes() {
         <ProtectedRoute>
           <Layout>
             <PurchaseEntry />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/purchase-order" element={
-        <ProtectedRoute>
-          <Layout>
-            <PurchaseOrder />
           </Layout>
         </ProtectedRoute>
       } />
