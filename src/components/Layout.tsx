@@ -101,11 +101,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
               <span className="text-sm font-medium text-gray-700">
-                {user?.username || 'User'}
+                {user?.name || 'User'}
               </span>
             </div>
             <Button
@@ -134,7 +134,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
-                Welcome, {user?.username || 'User'}
+                Welcome, {user?.name || 'User'}
               </span>
             </div>
           </div>
