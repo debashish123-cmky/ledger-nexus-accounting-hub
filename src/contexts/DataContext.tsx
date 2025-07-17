@@ -1,70 +1,54 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export interface Customer {
-  id: string;
-  customerName: string;
-  phoneNo: string;
-  taxableAmt: number;
-  cgst: number;
-  sgst: number;
-  igst: number;
-  total: number;
-  invoices: number;
-  createdAt: string;
-}
-
-export interface Client {
+interface Customer {
   id: string;
   name: string;
-  email: string;
   phone: string;
+  email: string;
   address: string;
-  gstNumber: string;
-  status: 'active' | 'inactive';
-  totalPurchases: number;
-  lastPurchase: string;
+  gstNumber?: string;
   createdAt: string;
 }
 
-export interface Vendor {
+interface Vendor {
   id: string;
   vendorNumber: string;
   name: string;
-  email: string;
   phone: string;
+  email: string;
   address: string;
-  gstNumber: string;
-  status: 'active' | 'inactive';
+  gstNumber?: string;
+  paymentTerms: string;
   category: string;
-  totalSupplied: number;
-  lastSupply: string;
   createdAt: string;
 }
 
-export interface Sale {
+interface Sale {
   id: string;
-  customer: string;
-  amount: number;
-  status: 'Completed' | 'Pending' | 'Processing';
+  customerName: string;
+  phoneNumber?: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+    total: number;
+  }>;
+  subtotal: number;
+  tax: number;
+  total: number;
   date: string;
+  invoiceNumber?: string;
 }
 
-export interface Product {
-  id: string;
-  name: string;
-  sales: number;
-  revenue: number;
-}
-
-export interface Role {
+interface Role {
   id: string;
   name: string;
   permissions: string[];
   createdAt: string;
 }
 
-export interface Account {
+interface Account {
   id: string;
   username: string;
   email: string;
@@ -73,38 +57,253 @@ export interface Account {
   createdAt: string;
 }
 
+interface Purchase {
+  id: string;
+  vendorName: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+    total: number;
+  }>;
+  subtotal: number;
+  tax: number;
+  total: number;
+  date: string;
+  invoiceNumber?: string;
+}
+
+interface LedgerEntry {
+  id: string;
+  ledgerName: string;
+  amount: number;
+  debit: number;
+  credit: number;
+  group: 'Assets' | 'Liabilities' | 'Income' | 'Expenses' | 'Equity';
+}
+
 interface DataContextType {
   customers: Customer[];
-  clients: Client[];
   vendors: Vendor[];
   sales: Sale[];
-  products: Product[];
   roles: Role[];
   accounts: Account[];
-  addCustomer: (customer: Customer) => void;
-  updateCustomer: (id: string, customer: Customer) => void;
+  purchases: Purchase[];
+  ledgers: LedgerEntry[];
+  addCustomer: (customer: Omit<Customer, 'id' | 'createdAt'>) => void;
+  updateCustomer: (id: string, customer: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
-  addClient: (client: Client) => void;
-  updateClient: (id: string, client: Client) => void;
-  deleteClient: (id: string) => void;
-  addVendor: (vendor: Vendor) => void;
-  updateVendor: (id: string, vendor: Vendor) => void;
+  addVendor: (vendor: Omit<Vendor, 'id' | 'createdAt'>) => void;
+  updateVendor: (id: string, vendor: Partial<Vendor>) => void;
   deleteVendor: (id: string) => void;
-  addSale: (sale: Sale) => void;
-  updateSale: (id: string, sale: Sale) => void;
-  deleteSale: (id: string) => void;
-  addProduct: (product: Product) => void;
-  updateProduct: (id: string, product: Product) => void;
-  deleteProduct: (id: string) => void;
-  addRole: (role: Role) => void;
-  updateRole: (id: string, role: Role) => void;
+  addSale: (sale: Omit<Sale, 'id'>) => void;
+  addRole: (role: Omit<Role, 'id' | 'createdAt'>) => void;
+  updateRole: (id: string, role: Partial<Role>) => void;
   deleteRole: (id: string) => void;
-  addAccount: (account: Account) => void;
-  updateAccount: (id: string, account: Account) => void;
+  addAccount: (account: Omit<Account, 'id' | 'createdAt'>) => void;
+  updateAccount: (id: string, account: Partial<Account>) => void;
   deleteAccount: (id: string) => void;
+  addPurchase: (purchase: Omit<Purchase, 'id'>) => void;
+  addLedger: (ledger: Omit<LedgerEntry, 'id'>) => void;
+  updateLedger: (id: string, ledger: Partial<LedgerEntry>) => void;
+  deleteLedger: (id: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
+
+export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [ledgers, setLedgers] = useState<LedgerEntry[]>([]);
+
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    const savedCustomers = localStorage.getItem('medical-store-customers');
+    const savedVendors = localStorage.getItem('medical-store-vendors');
+    const savedSales = localStorage.getItem('medical-store-sales');
+    const savedRoles = localStorage.getItem('medical-store-roles');
+    const savedAccounts = localStorage.getItem('medical-store-accounts');
+    const savedPurchases = localStorage.getItem('medical-store-purchases');
+    const savedLedgers = localStorage.getItem('medical-store-ledgers');
+
+    if (savedCustomers) setCustomers(JSON.parse(savedCustomers));
+    if (savedVendors) setVendors(JSON.parse(savedVendors));
+    if (savedSales) setSales(JSON.parse(savedSales));
+    if (savedRoles) setRoles(JSON.parse(savedRoles));
+    if (savedAccounts) setAccounts(JSON.parse(savedAccounts));
+    if (savedPurchases) setPurchases(JSON.parse(savedPurchases));
+    if (savedLedgers) setLedgers(JSON.parse(savedLedgers));
+  }, []);
+
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem('medical-store-customers', JSON.stringify(customers));
+  }, [customers]);
+
+  useEffect(() => {
+    localStorage.setItem('medical-store-vendors', JSON.stringify(vendors));
+  }, [vendors]);
+
+  useEffect(() => {
+    localStorage.setItem('medical-store-sales', JSON.stringify(sales));
+  }, [sales]);
+
+  useEffect(() => {
+    localStorage.setItem('medical-store-roles', JSON.stringify(roles));
+  }, [roles]);
+
+  useEffect(() => {
+    localStorage.setItem('medical-store-accounts', JSON.stringify(accounts));
+  }, [accounts]);
+
+  useEffect(() => {
+    localStorage.setItem('medical-store-purchases', JSON.stringify(purchases));
+  }, [purchases]);
+
+  useEffect(() => {
+    localStorage.setItem('medical-store-ledgers', JSON.stringify(ledgers));
+  }, [ledgers]);
+
+  // Customer functions
+  const addCustomer = (customer: Omit<Customer, 'id' | 'createdAt'>) => {
+    const newCustomer: Customer = {
+      ...customer,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    setCustomers(prev => [...prev, newCustomer]);
+  };
+
+  const updateCustomer = (id: string, customer: Partial<Customer>) => {
+    setCustomers(prev => prev.map(c => c.id === id ? { ...c, ...customer } : c));
+  };
+
+  const deleteCustomer = (id: string) => {
+    setCustomers(prev => prev.filter(c => c.id !== id));
+  };
+
+  // Vendor functions
+  const addVendor = (vendor: Omit<Vendor, 'id' | 'createdAt'>) => {
+    const newVendor: Vendor = {
+      ...vendor,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    setVendors(prev => [...prev, newVendor]);
+  };
+
+  const updateVendor = (id: string, vendor: Partial<Vendor>) => {
+    setVendors(prev => prev.map(v => v.id === id ? { ...v, ...vendor } : v));
+  };
+
+  const deleteVendor = (id: string) => {
+    setVendors(prev => prev.filter(v => v.id !== id));
+  };
+
+  // Sales functions
+  const addSale = (sale: Omit<Sale, 'id'>) => {
+    const newSale: Sale = {
+      ...sale,
+      id: Date.now().toString(),
+    };
+    setSales(prev => [...prev, newSale]);
+  };
+
+  // Role functions
+  const addRole = (role: Omit<Role, 'id' | 'createdAt'>) => {
+    const newRole: Role = {
+      ...role,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    setRoles(prev => [...prev, newRole]);
+  };
+
+  const updateRole = (id: string, role: Partial<Role>) => {
+    setRoles(prev => prev.map(r => r.id === id ? { ...r, ...role } : r));
+  };
+
+  const deleteRole = (id: string) => {
+    setRoles(prev => prev.filter(r => r.id !== id));
+  };
+
+  // Account functions
+  const addAccount = (account: Omit<Account, 'id' | 'createdAt'>) => {
+    const newAccount: Account = {
+      ...account,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    setAccounts(prev => [...prev, newAccount]);
+  };
+
+  const updateAccount = (id: string, account: Partial<Account>) => {
+    setAccounts(prev => prev.map(a => a.id === id ? { ...a, ...account } : a));
+  };
+
+  const deleteAccount = (id: string) => {
+    setAccounts(prev => prev.filter(a => a.id !== id));
+  };
+
+  // Purchase functions
+  const addPurchase = (purchase: Omit<Purchase, 'id'>) => {
+    const newPurchase: Purchase = {
+      ...purchase,
+      id: Date.now().toString(),
+    };
+    setPurchases(prev => [...prev, newPurchase]);
+  };
+
+  // Ledger functions
+  const addLedger = (ledger: Omit<LedgerEntry, 'id'>) => {
+    const newLedger: LedgerEntry = {
+      ...ledger,
+      id: Date.now().toString(),
+    };
+    setLedgers(prev => [...prev, newLedger]);
+  };
+
+  const updateLedger = (id: string, ledger: Partial<LedgerEntry>) => {
+    setLedgers(prev => prev.map(l => l.id === id ? { ...l, ...ledger } : l));
+  };
+
+  const deleteLedger = (id: string) => {
+    setLedgers(prev => prev.filter(l => l.id !== id));
+  };
+
+  const value: DataContextType = {
+    customers,
+    vendors,
+    sales,
+    roles,
+    accounts,
+    purchases,
+    ledgers,
+    addCustomer,
+    updateCustomer,
+    deleteCustomer,
+    addVendor,
+    updateVendor,
+    deleteVendor,
+    addSale,
+    addRole,
+    updateRole,
+    deleteRole,
+    addAccount,
+    updateAccount,
+    deleteAccount,
+    addPurchase,
+    addLedger,
+    updateLedger,
+    deleteLedger,
+  };
+
+  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+};
 
 export const useData = () => {
   const context = useContext(DataContext);
@@ -112,133 +311,4 @@ export const useData = () => {
     throw new Error('useData must be used within a DataProvider');
   }
   return context;
-};
-
-export const DataProvider = ({ children }: { children: ReactNode }) => {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-
-  const addCustomer = (customer: Customer) => {
-    setCustomers(prev => [...prev, customer]);
-  };
-
-  const updateCustomer = (id: string, customer: Customer) => {
-    setCustomers(prev => prev.map(c => c.id === id ? customer : c));
-  };
-
-  const deleteCustomer = (id: string) => {
-    setCustomers(prev => prev.filter(c => c.id !== id));
-  };
-
-  const addClient = (client: Client) => {
-    setClients(prev => [...prev, client]);
-  };
-
-  const updateClient = (id: string, client: Client) => {
-    setClients(prev => prev.map(c => c.id === id ? client : c));
-  };
-
-  const deleteClient = (id: string) => {
-    setClients(prev => prev.filter(c => c.id !== id));
-  };
-
-  const addVendor = (vendor: Vendor) => {
-    setVendors(prev => [...prev, vendor]);
-  };
-
-  const updateVendor = (id: string, vendor: Vendor) => {
-    setVendors(prev => prev.map(v => v.id === id ? vendor : v));
-  };
-
-  const deleteVendor = (id: string) => {
-    setVendors(prev => prev.filter(v => v.id !== id));
-  };
-
-  const addSale = (sale: Sale) => {
-    setSales(prev => [...prev, sale]);
-  };
-
-  const updateSale = (id: string, sale: Sale) => {
-    setSales(prev => prev.map(s => s.id === id ? sale : s));
-  };
-
-  const deleteSale = (id: string) => {
-    setSales(prev => prev.filter(s => s.id !== id));
-  };
-
-  const addProduct = (product: Product) => {
-    setProducts(prev => [...prev, product]);
-  };
-
-  const updateProduct = (id: string, product: Product) => {
-    setProducts(prev => prev.map(p => p.id === id ? product : p));
-  };
-
-  const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
-  };
-
-  const addRole = (role: Role) => {
-    setRoles(prev => [...prev, role]);
-  };
-
-  const updateRole = (id: string, role: Role) => {
-    setRoles(prev => prev.map(r => r.id === id ? role : r));
-  };
-
-  const deleteRole = (id: string) => {
-    setRoles(prev => prev.filter(r => r.id !== id));
-  };
-
-  const addAccount = (account: Account) => {
-    setAccounts(prev => [...prev, account]);
-  };
-
-  const updateAccount = (id: string, account: Account) => {
-    setAccounts(prev => prev.map(a => a.id === id ? account : a));
-  };
-
-  const deleteAccount = (id: string) => {
-    setAccounts(prev => prev.filter(a => a.id !== id));
-  };
-
-  return (
-    <DataContext.Provider value={{
-      customers,
-      clients,
-      vendors,
-      sales,
-      products,
-      roles,
-      accounts,
-      addCustomer,
-      updateCustomer,
-      deleteCustomer,
-      addClient,
-      updateClient,
-      deleteClient,
-      addVendor,
-      updateVendor,
-      deleteVendor,
-      addSale,
-      updateSale,
-      deleteSale,
-      addProduct,
-      updateProduct,
-      deleteProduct,
-      addRole,
-      updateRole,
-      deleteRole,
-      addAccount,
-      updateAccount,
-      deleteAccount
-    }}>
-      {children}
-    </DataContext.Provider>
-  );
 };

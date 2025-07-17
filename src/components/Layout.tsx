@@ -73,7 +73,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </button>
         </div>
         
-        <nav className="mt-8">
+        <nav className="mt-8 flex-1 overflow-y-auto pb-20">
           <div className="px-4 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -88,23 +88,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   }`}
                   onClick={() => setIsSidebarOpen(false)}
                 >
-                  <Icon className="w-5 h-5 mr-3" />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <span className="font-medium truncate">{item.label}</span>
                 </Link>
               );
             })}
           </div>
         </nav>
         
-        <div className="absolute bottom-0 w-full p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-medium">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-gray-700 truncate">
                 {user?.name || 'User'}
               </span>
             </div>
@@ -112,7 +112,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               onClick={handleLogout}
               size="sm"
               variant="ghost"
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-2"
             >
               <LogOut className="w-4 h-4" />
             </Button>

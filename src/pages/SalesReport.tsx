@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Eye, Download, Filter } from 'lucide-react';
+import { BarChart3, Eye, Download, Filter, FileText, TrendingUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useData } from '@/contexts/DataContext';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface SalesRecord {
   id: string;
@@ -31,13 +33,47 @@ interface SalesInvoice {
 }
 
 const SalesReport = () => {
+  const { sales } = useData();
   const [dateFrom, setDateFrom] = useState('2024-01-01');
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
   const [selectedCustomer, setSelectedCustomer] = useState<SalesRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Empty data array
-  const salesRecords: SalesRecord[] = [];
+  // Convert real sales data to sales records format
+  const salesRecords: SalesRecord[] = sales.map(sale => ({
+    id: sale.id,
+    customerName: sale.customerName,
+    phoneNo: sale.phoneNumber || 'N/A',
+    taxableAmt: sale.subtotal,
+    cgst: sale.tax * 0.5, // Assuming 50% of tax is CGST
+    sgst: sale.tax * 0.5, // Assuming 50% of tax is SGST
+    igst: 0, // IGST is usually 0 when CGST and SGST are present
+    total: sale.total,
+    invoices: [{
+      id: sale.id,
+      invoiceNo: sale.invoiceNumber || `INV-${sale.id.slice(-6)}`,
+      invoiceDate: sale.date,
+      amount: sale.total,
+      paymentStatus: 'Paid' as const
+    }]
+  }));
+
+  // Generate chart data from real sales
+  const generateChartData = () => {
+    const monthlyData = sales.reduce((acc: any, sale) => {
+      const month = new Date(sale.date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+      if (!acc[month]) {
+        acc[month] = { month, sales: 0, amount: 0 };
+      }
+      acc[month].sales += 1;
+      acc[month].amount += sale.total;
+      return acc;
+    }, {});
+
+    return Object.values(monthlyData).slice(-12); // Last 12 months
+  };
+
+  const chartData = generateChartData();
 
   const calculateTotals = () => {
     const totalTaxable = salesRecords.reduce((sum, record) => sum + record.taxableAmt, 0);
@@ -72,6 +108,35 @@ const SalesReport = () => {
     toast({ title: 'Sales report exported successfully!' });
   };
 
+  const generateDetailedReport = () => {
+    const reportContent = `
+SALES REPORT
+============
+From: ${new Date(dateFrom).toLocaleDateString('en-IN')}
+To: ${new Date(dateTo).toLocaleDateString('en-IN')}
+
+SUMMARY:
+--------
+Total Sales: ${salesRecords.length}
+Total Amount: ₹${calculateTotals().grandTotal.toLocaleString('en-IN')}
+Total Tax: ₹${(calculateTotals().totalCGST + calculateTotals().totalSGST + calculateTotals().totalIGST).toLocaleString('en-IN')}
+
+CUSTOMER WISE SALES:
+-------------------
+${salesRecords.map(record => 
+  `${record.customerName} - ₹${record.total.toLocaleString('en-IN')}`
+).join('\n')}
+    `;
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `detailed-sales-report-${Date.now()}.txt`;
+    a.click();
+    toast({ title: 'Detailed sales report generated!' });
+  };
+
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
       case 'Paid': return 'bg-green-100 text-green-800';
@@ -90,10 +155,16 @@ const SalesReport = () => {
           <BarChart3 className="h-6 w-6 text-green-600" />
           <h2 className="text-2xl font-bold">Sales Report</h2>
         </div>
-        <Button onClick={exportToCSV} variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Export Report
-        </Button>
+        <div className="flex space-x-2">
+          <Button onClick={generateDetailedReport} variant="outline">
+            <FileText className="h-4 w-4 mr-2" />
+            Generate Report
+          </Button>
+          <Button onClick={exportToCSV} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Date Filter */}
@@ -127,6 +198,53 @@ const SalesReport = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Charts */}
+      {chartData.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <TrendingUp className="h-5 w-5" />
+                <span>Monthly Sales Volume</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="sales" fill="#3b82f6" name="Number of Sales" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <BarChart3 className="h-5 w-5" />
+                <span>Monthly Revenue</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Revenue']} />
+                  <Legend />
+                  <Line type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={2} name="Revenue (₹)" />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">

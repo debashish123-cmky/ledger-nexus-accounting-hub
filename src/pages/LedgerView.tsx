@@ -8,22 +8,21 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Edit, Trash2, Download, BookOpen, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Download, BookOpen } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useData } from '@/contexts/DataContext';
 
 interface LedgerEntry {
   id: string;
   ledgerName: string;
-  group: 'Assets' | 'Liabilities' | 'Income' | 'Expenses' | 'Equity';
+  amount: number;
   debit: number;
   credit: number;
-  balance: number;
-  lastTransactionDate: string;
-  transactionCount: number;
+  group: 'Assets' | 'Liabilities' | 'Income' | 'Expenses' | 'Equity';
 }
 
 const LedgerView = () => {
-  const [ledgers, setLedgers] = useState<LedgerEntry[]>([]);
+  const { ledgers, addLedger, updateLedger, deleteLedger } = useData();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
@@ -31,6 +30,9 @@ const LedgerView = () => {
   const [editingLedger, setEditingLedger] = useState<LedgerEntry | null>(null);
   const [formData, setFormData] = useState({
     ledgerName: '',
+    amount: '',
+    debit: '',
+    credit: '',
     group: 'Assets' as 'Assets' | 'Liabilities' | 'Income' | 'Expenses' | 'Equity'
   });
 
@@ -45,24 +47,23 @@ const LedgerView = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    const ledgerData = {
+      ledgerName: formData.ledgerName,
+      amount: parseFloat(formData.amount) || 0,
+      debit: parseFloat(formData.debit) || 0,
+      credit: parseFloat(formData.credit) || 0,
+      group: formData.group
+    };
+
     if (editingLedger) {
-      setLedgers(ledgers.map(ledger =>
-        ledger.id === editingLedger.id
-          ? { ...ledger, ...formData }
-          : ledger
-      ));
+      updateLedger(editingLedger.id, ledgerData);
       toast({ title: 'Ledger updated successfully!' });
     } else {
       const newLedger: LedgerEntry = {
         id: Date.now().toString(),
-        ...formData,
-        debit: 0,
-        credit: 0,
-        balance: 0,
-        lastTransactionDate: new Date().toISOString().split('T')[0],
-        transactionCount: 0
+        ...ledgerData
       };
-      setLedgers([...ledgers, newLedger]);
+      addLedger(newLedger);
       toast({ title: 'Ledger created successfully!' });
     }
     
@@ -72,7 +73,10 @@ const LedgerView = () => {
   const resetForm = () => {
     setFormData({
       ledgerName: '',
-      group: 'Assets' as 'Assets' | 'Liabilities' | 'Income' | 'Expenses' | 'Equity'
+      amount: '',
+      debit: '',
+      credit: '',
+      group: 'Assets'
     });
     setEditingLedger(null);
     setIsDialogOpen(false);
@@ -81,6 +85,9 @@ const LedgerView = () => {
   const handleEdit = (ledger: LedgerEntry) => {
     setFormData({
       ledgerName: ledger.ledgerName,
+      amount: ledger.amount.toString(),
+      debit: ledger.debit.toString(),
+      credit: ledger.credit.toString(),
       group: ledger.group
     });
     setEditingLedger(ledger);
@@ -88,21 +95,19 @@ const LedgerView = () => {
   };
 
   const handleDelete = (id: string) => {
-    setLedgers(ledgers.filter(ledger => ledger.id !== id));
+    deleteLedger(id);
     toast({ title: 'Ledger deleted successfully!' });
-  };
-
-  const handleViewTransactions = (ledger: LedgerEntry) => {
-    toast({ title: `Viewing transactions for ${ledger.ledgerName}` });
-    // Here you would typically navigate to transaction details
   };
 
   const exportToCSV = () => {
     const csvContent = [
-      ['Ledger Name', 'Group', 'Debit', 'Credit', 'Balance', 'Transaction Count'],
+      ['Ledger Name', 'Amount', 'Debit', 'Credit', 'Group'],
       ...filteredLedgers.map(ledger => [
-        ledger.ledgerName, ledger.group, ledger.debit.toString(),
-        ledger.credit.toString(), ledger.balance.toString(), ledger.transactionCount.toString()
+        ledger.ledgerName, 
+        ledger.amount.toString(),
+        ledger.debit.toString(), 
+        ledger.credit.toString(), 
+        ledger.group
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -126,46 +131,40 @@ const LedgerView = () => {
     }
   };
 
-  const calculateGroupTotals = () => {
-    const groupTotals = groups.reduce((acc, group) => {
-      const groupLedgers = filteredLedgers.filter(ledger => ledger.group === group);
-      acc[group] = {
-        count: groupLedgers.length,
-        totalDebit: groupLedgers.reduce((sum, ledger) => sum + ledger.debit, 0),
-        totalCredit: groupLedgers.reduce((sum, ledger) => sum + ledger.credit, 0),
-        netBalance: groupLedgers.reduce((sum, ledger) => sum + ledger.balance, 0)
-      };
-      return acc;
-    }, {} as Record<string, any>);
-    
-    return groupTotals;
+  const calculateTotals = () => {
+    return {
+      totalAmount: filteredLedgers.reduce((sum, ledger) => sum + ledger.amount, 0),
+      totalDebit: filteredLedgers.reduce((sum, ledger) => sum + ledger.debit, 0),
+      totalCredit: filteredLedgers.reduce((sum, ledger) => sum + ledger.credit, 0),
+      totalEntries: filteredLedgers.length
+    };
   };
 
-  const groupTotals = calculateGroupTotals();
+  const totals = calculateTotals();
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <BookOpen className="h-6 w-6 text-indigo-600" />
-          <h2 className="text-2xl font-bold">Ledger View</h2>
+          <h2 className="text-2xl font-bold">Ledger Management</h2>
         </div>
         <div className="flex space-x-2">
           <Button onClick={exportToCSV} variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Export CSV
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => resetForm()}>
                 <Plus className="h-4 w-4 mr-2" />
-                Create Ledger
+                Add Ledger Entry
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>
-                  {editingLedger ? 'Edit Ledger' : 'Create New Ledger'}
+                  {editingLedger ? 'Edit Ledger Entry' : 'Create New Ledger Entry'}
                 </DialogTitle>
                 <DialogDescription>
                   Enter ledger details below.
@@ -178,8 +177,43 @@ const LedgerView = () => {
                     id="ledgerName"
                     value={formData.ledgerName}
                     onChange={(e) => setFormData({...formData, ledgerName: e.target.value})}
+                    placeholder="Enter ledger name"
                     required
                   />
+                </div>
+                
+                <div>
+                  <Label htmlFor="amount">Amount</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                    placeholder="Enter amount"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="debit">Debit</Label>
+                    <Input
+                      id="debit"
+                      type="number"
+                      value={formData.debit}
+                      onChange={(e) => setFormData({...formData, debit: e.target.value})}
+                      placeholder="Enter debit"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="credit">Credit</Label>
+                    <Input
+                      id="credit"
+                      type="number"
+                      value={formData.credit}
+                      onChange={(e) => setFormData({...formData, credit: e.target.value})}
+                      placeholder="Enter credit"
+                    />
+                  </div>
                 </div>
                 
                 <div>
@@ -201,7 +235,7 @@ const LedgerView = () => {
                     Cancel
                   </Button>
                   <Button type="submit">
-                    {editingLedger ? 'Update' : 'Create'} Ledger
+                    {editingLedger ? 'Update' : 'Create'} Entry
                   </Button>
                 </div>
               </form>
@@ -210,32 +244,51 @@ const LedgerView = () => {
         </div>
       </div>
 
-      {/* Group Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {groups.map(group => (
-          <Card key={group}>
-            <CardContent className="p-4">
-              <div className="text-center">
-                <div className="text-lg font-bold text-gray-800">{groupTotals[group]?.count || 0}</div>
-                <p className="text-sm text-gray-600">{group}</p>
-                <p className="text-xs text-gray-500">
-                  Net: ₹{(groupTotals[group]?.netBalance || 0).toLocaleString('en-IN')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">₹{totals.totalAmount.toLocaleString('en-IN')}</div>
+              <p className="text-sm text-gray-600">Total Amount</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">₹{totals.totalDebit.toLocaleString('en-IN')}</div>
+              <p className="text-sm text-gray-600">Total Debit</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">₹{totals.totalCredit.toLocaleString('en-IN')}</div>
+              <p className="text-sm text-gray-600">Total Credit</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-800">{totals.totalEntries}</div>
+              <p className="text-sm text-gray-600">Total Entries</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter & Search</CardTitle>
+          <CardTitle>Search & Filter</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <Label htmlFor="search">Search Ledgers</Label>
+              <Label htmlFor="search">Search Ledger</Label>
               <div className="flex items-center space-x-2">
                 <Search className="h-4 w-4 text-gray-400" />
                 <Input
@@ -267,9 +320,9 @@ const LedgerView = () => {
       {/* Ledger Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Ledger Accounts</CardTitle>
+          <CardTitle>Ledger Entries</CardTitle>
           <CardDescription>
-            All ledger accounts with their current balances ({filteredLedgers.length} ledgers)
+            All ledger entries with current balances ({filteredLedgers.length} entries)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -278,12 +331,10 @@ const LedgerView = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Ledger Name</TableHead>
-                  <TableHead>Group</TableHead>
+                  <TableHead>Amount</TableHead>
                   <TableHead>Debit</TableHead>
                   <TableHead>Credit</TableHead>
-                  <TableHead>Balance</TableHead>
-                  <TableHead>Transactions</TableHead>
-                  <TableHead>Last Transaction</TableHead>
+                  <TableHead>Group</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -291,29 +342,16 @@ const LedgerView = () => {
                 {filteredLedgers.map((ledger) => (
                   <TableRow key={ledger.id}>
                     <TableCell className="font-medium">{ledger.ledgerName}</TableCell>
+                    <TableCell className="font-semibold">₹{ledger.amount.toLocaleString('en-IN')}</TableCell>
+                    <TableCell className="text-red-600 font-medium">₹{ledger.debit.toLocaleString('en-IN')}</TableCell>
+                    <TableCell className="text-green-600 font-medium">₹{ledger.credit.toLocaleString('en-IN')}</TableCell>
                     <TableCell>
                       <Badge className={getGroupColor(ledger.group)}>
                         {ledger.group}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-red-600">₹{ledger.debit.toLocaleString('en-IN')}</TableCell>
-                    <TableCell className="text-green-600">₹{ledger.credit.toLocaleString('en-IN')}</TableCell>
-                    <TableCell>
-                      <span className={`font-semibold ${ledger.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ₹{Math.abs(ledger.balance).toLocaleString('en-IN')} {ledger.balance >= 0 ? 'Dr' : 'Cr'}
-                      </span>
-                    </TableCell>
-                    <TableCell>{ledger.transactionCount}</TableCell>
-                    <TableCell>{new Date(ledger.lastTransactionDate).toLocaleDateString('en-IN')}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleViewTransactions(ledger)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -325,6 +363,7 @@ const LedgerView = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => handleDelete(ledger.id)}
+                          className="text-red-600 hover:text-red-700"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -339,46 +378,12 @@ const LedgerView = () => {
           {filteredLedgers.length === 0 && (
             <div className="text-center py-8">
               <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No ledgers found</p>
+              <p className="text-gray-500">No ledger entries found</p>
+              <p className="text-gray-400 text-sm">Create your first ledger entry to get started</p>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {/* Trial Balance Summary */}
-      {filteredLedgers.length > 0 && (
-        <Card className="bg-indigo-50 border-indigo-200">
-          <CardHeader>
-            <CardTitle className="text-indigo-800">Trial Balance Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-indigo-600">Total Debit</p>
-                <p className="text-xl font-bold text-indigo-800">
-                  ₹{filteredLedgers.reduce((sum, ledger) => sum + ledger.debit, 0).toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-indigo-600">Total Credit</p>
-                <p className="text-xl font-bold text-indigo-800">
-                  ₹{filteredLedgers.reduce((sum, ledger) => sum + ledger.credit, 0).toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-indigo-600">Net Balance</p>
-                <p className="text-xl font-bold text-indigo-800">
-                  ₹{Math.abs(filteredLedgers.reduce((sum, ledger) => sum + ledger.balance, 0)).toLocaleString('en-IN')}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-indigo-600">Total Ledgers</p>
-                <p className="text-xl font-bold text-indigo-800">{filteredLedgers.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
